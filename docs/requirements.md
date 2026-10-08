@@ -194,12 +194,14 @@ The data has inconsistencies that look deliberate. Normalization runs once, when
 
 | Finding | Size | Rule |
 | --- | --- | --- |
-| Posts not in time order | 449 of 800 conversations | Sort posts by timestamp |
+| Posts not in time order | 449 of 800 conversations | The opening post is `post_id` 1; sort the replies by timestamp |
+| A reply dated before the question | 220 conversations | Keep `post_id` 1 as the opening post and `created_at` as given; never pick the opening post by timestamp |
 | Same user posts under different roles | 20 users | Keep the role per post as "role at time of posting"; never derive a user's role |
 | Status "answered" with no accepted answer | 105 conversations | Keep status as given; the thread page shows "No accepted answer" |
 | Topic titles repeat | 723 of 800 share a title | Key everything on `identifier`. No IDs on screen: rows are told apart by excerpt, challenge and date |
-| Missing description | 60 conversations | Fall back to the opening post's content (the earliest post after sorting) |
-| Descriptions restate record fields | Status and priority in 333 conversations (170 inline, 163 in a triage table); an internal ID in 521 (confirm in tests) | Strip the lines and table rows that restate status, priority, category, topic, tags or an internal ID. Priority is admin only and search reads the description, so nothing of it may reach a learner through display or search |
+| Missing description | 60 conversations | Fall back to the opening post's content (`post_id` 1) |
+| Descriptions restate record fields | Status and priority in 333 conversations (170 inline, 163 in a triage table); an internal ID in 521 (confirm in tests) | Strip the lines and table rows that restate status, priority, category, topic, tags or an internal ID. Priority is admin only and search reads the description, so nothing of it may reach a learner through display or search. Then remove what is left behind: the "Triage notes" heading, a heading with nothing under it, an empty code fence and a bare line repeating the topic (333) |
+| An internal ID typed by the asker | 10 conversations mention a challenge ID in a post; 9 of their descriptions quote it | Leave it: post content is never rewritten. "No IDs on screen" covers the interface and the stripped metadata, not what a learner wrote |
 | `post_id` repeats across conversations | Values 1 to 12 | A post is identified by its conversation and `post_id` together |
 | Posts share a timestamp | 8 conversations | Break ties by `post_id` |
 | `points` stored as a string | 1 challenge (CHAL\_022) | Convert to a number |
@@ -209,9 +211,9 @@ The data has inconsistencies that look deliberate. Normalization runs once, when
 | No resolution time | 375 conversations (open and answered) | Resolution metrics use resolved and closed conversations only |
 | Markdown in descriptions | Most conversations and challenges | Render with `react-markdown`, raw HTML off |
 
-Verified links: every conversation's `challenge_id` exists, `participants` matches the post authors, and `created_at` matches the earliest post. But `last_activity_at` comes from the last post *in file order*, not the latest one, so it is wrong for 267 conversations. Rule: recompute it from the latest post after sorting. The default sort, latest activity, depends on this.
+Verified links: every conversation's `challenge_id` exists, `participants` matches the post authors, and `created_at` matches `post_id` 1 in all 800 conversations. It does not match the earliest post: in 220 conversations a reply is dated before the question. But `last_activity_at` comes from the last post *in file order*, not the latest one, so it is wrong for 267 conversations. Rule: recompute it from the latest post by timestamp. The default sort, latest activity, depends on this.
 
-Found while drawing the screens: in 48 conversations the accepted answer is the opening post itself. Rule: keep it, label it "Solved by the asker", and add a unit test so the UI doesn't assume the answer is a reply. These cases only appear after sorting: in file order the accepted answer is never the first post. Rule order: sort the posts first, then derive the opening post, the accepted answer, the description fallback and the last activity, with a unit test for that order.
+The opening post is `post_id` 1. The first version of this document picked the earliest post by timestamp, which made a reply the question in those 220 conversations and produced 48 threads whose accepted answer was "the opening post". The data check before the domain slice caught it: all 740 descriptions quote `post_id` 1, and all 357 accepted answers are mentor, staff or support posts, never `post_id` 1. Rule: "Solved by the asker" applies when the accepted answer's author is the asker (20 conversations), with a unit test. Rule order: put `post_id` 1 first and sort the replies, then derive the accepted answer, the description fallback and the last activity, with a unit test for that order. A thread can therefore show a reply dated before its question; the dates are shown as given.
 
 ## Mock API contract
 
@@ -260,7 +262,7 @@ Five milestones, each ending in a working state that could be submitted. Every d
 ### M1 · Foundation and conversation list
 
 - [x] Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
-- [ ] Domain types, normalization and `can()`, with unit tests
+- [x] Domain types, normalization and `can()`, with unit tests
 - [ ] Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
 - [ ] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
 - [ ] App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
@@ -281,7 +283,7 @@ Five milestones, each ending in a working state that could be submitted. Every d
 
 ### M3 · Insights
 
-- [ ] `/api/insights` aggregation with a unit test against hand-checked numbers
+- [ ] `/api/insights` aggregation with a unit test against hand-checked numbers. For the hand check: in 20 resolved or closed conversations `resolution_time_hours` is shorter than the span of the posts. Use the field as given; no rule
 - [ ] Summary tiles and four charts with text summaries: FR-18 to FR-21
 - [ ] Admin-only route with a clear "not permitted" state
 

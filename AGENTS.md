@@ -99,16 +99,18 @@ All list responses: `{ items, page, pageSize, total }`. `pageSize` max 50, defau
 
 Normalization runs once when the store loads. Every rule has a unit test in `domain/normalize.test.ts`.
 
-- Sort posts by timestamp (449 of 800 conversations are out of order); break ties by `post_id` (8 conversations).
-- Sort first. The opening post, the accepted answer, the description fallback and `lastActivityAt` are all derived from the sorted posts, and a test covers that order.
-- Recompute `lastActivityAt` from the latest post after sorting (267 conversations are wrong in the source).
+- The opening post is `post_id` 1, never the earliest timestamp: in 220 conversations a reply is dated before the question, while `created_at` and the description follow `post_id` 1 in every conversation (D35). Keep `created_at` as given.
+- Sort the replies by timestamp (449 of 800 conversations are out of order); break ties by `post_id` (8 conversations).
+- Order first. The opening post, the accepted answer, the description fallback and `lastActivityAt` are all derived from the ordered posts, and a test covers that order.
+- Recompute `lastActivityAt` from the latest post by timestamp (267 conversations are wrong in the source).
 - Keep `user_role` per post as "role at time of posting"; never derive a user's role (20 users have several roles).
 - Missing `description` (60): fall back to the opening post's content.
-- Strip embedded metadata from descriptions: the lines and table rows that restate status, priority, category, topic, tags or an internal ID (status and priority in 333 descriptions, an ID in 521; confirm in tests). Priority is admin only and search reads the description, so none of it may reach a learner through display or search.
+- Strip embedded metadata from descriptions: the lines and table rows that restate status, priority, category, topic, tags or an internal ID (status and priority in 333 descriptions, an ID in 521; confirm in tests). Priority is admin only and search reads the description, so none of it may reach a learner through display or search. Then remove what the stripping leaves behind: the "Triage notes" heading, a heading with nothing under it, an empty code fence and a bare line repeating the topic.
+- Post content is never rewritten: 10 conversations mention a challenge ID in a sentence the asker typed, and it stays (D36).
 - `points` may be a string (CHAL_022): convert to a number.
 - Key everything on IDs. Topic titles repeat (723 of 800 share one) and challenge titles repeat. `post_id` is unique only inside its conversation, so a post is identified by conversation and `post_id` together.
 - Keep `status` as given. "Answered" without an accepted answer (105) stays "answered".
-- An accepted answer can be the opening post (48 conversations): label it "Solved by the asker".
+- The accepted answer is never the opening post. When its author is the asker (20 conversations), label it "Solved by the asker".
 - `assigned_to: null` means unassigned (164).
 - Resolution metrics use resolved and closed conversations only (`resolution_time_hours` is null otherwise).
 - Draft and archived challenges (18) are hidden from the challenge list by default; their conversations stay visible.
@@ -154,3 +156,4 @@ Normalization runs once when the store loads. Every rule has a unit test in `dom
 6. **Ask, don't assume,** when a requirement is unclear or two rules conflict.
 7. **Don't touch** `data/` raw files, and don't change the API contract or folder structure without asking.
 8. **Stay in scope.** Out of scope: authentication, real voting, a moderator role, dark theme, optimistic updates, search on the Challenges page. Cut list, in order: ask-flow hints, challenge page, related threads, pin and lock, sessionStorage persistence, charts 4 → 2, the ask form itself.
+9. **After a commit, stop.** Never start the next slice without a new, approved plan.
