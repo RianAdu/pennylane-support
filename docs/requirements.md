@@ -1,6 +1,6 @@
 # PennyLane Support — Requirements & Roadmap
 
-Florian · started Oct 6, 2026 · last updated Oct 7, 2026
+Florian · started Oct 6, 2026 · last updated Oct 8, 2026
 
 > Source of truth for *what* to build. Agent rules live in `AGENTS.md`; the decision history lives in `DECISIONS.md`. Requirement IDs (FR-n, NFR-n) are referenced from commits and test names.
 
@@ -49,7 +49,7 @@ Diego confirmed scope, roles and data scale were left open on purpose, so each c
 | Framework | Vite + React + TypeScript | Next.js App Router | A client-side app against mocked APIs gains nothing from server rendering. MUI needs extra setup in the App Router, so the simpler stack wins. Next.js stays the right choice for content pages like pennylane.ai. |
 | Mock API | Mock Service Worker (MSW) | Next.js Route Handlers; importing JSON directly | Mocks live in frontend code, as the brief asks. The app makes real `fetch` calls, so a real backend replaces only the mock. The same handlers run in tests. Importing JSON directly would hide how a server behaves. |
 | Server state | TanStack Query | `useEffect` plus state; Redux | Caching, loading and error states, keeping the previous page while the next loads, refetching after a change. |
-| URL state | Search, filters, sort and page in URL search params (React Router) | Component state; a global store | Views are shareable and bookmarkable, and the back button works. |
+| URL state | Search, filters and page in URL search params (React Router) | Component state; a global store | Views are shareable and bookmarkable, and the back button works. |
 | Client state | React context for the current role only | Zustand, Redux | Only one piece of global client state exists, and every screen depends on it, so a full re-render on change is correct. Components use a useRole() hook, so moving to Zustand later changes one file. In production the role comes from the session and becomes server state. |
 | UI library | MUI with a custom theme | Tailwind | Accessible components out of the box: focus handling, ARIA, keyboard support. The theme acts as design tokens. |
 | Charts | MUI X Charts (free version) | Recharts, D3 | Uses the same theme as the rest of the UI, so less styling work. |
@@ -59,7 +59,7 @@ Diego confirmed scope, roles and data scale were left open on purpose, so each c
 
 ## Roles and permissions
 
-The role switcher sets who the *viewer* is: Learner or Admin. The demo learner is `you`; conversations you start are yours. The role travels with each request and the mock server checks it too, so a forbidden action returns 403 even if the UI is bypassed.
+The role switcher sets who the *viewer* is: Learner or Admin. The demo learner is one existing learner from the data, fixed in the mock server; threads that learner started count as the viewer's own. The role travels with each request and the mock server checks it too, so a forbidden action returns 403 even if the UI is bypassed.
 
 | Action | Learner | Admin |
 | --- | --- | --- |
@@ -81,33 +81,33 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 
 ### Community: conversation list (home)
 
-- **FR-1** Paginated list, 20 per page. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. Resolved threads with an accepted answer show a check in the status. No internal IDs on screen.
-- **FR-2** Search in the top bar across topic and description, done by the server and debounced in the UI.
-- **FR-3** Left sidebar: Community with its 13 categories and thread counts, then Challenges, plus Insights for the admin. Picking a category filters the list and renames the header.
-- **FR-4** Intent tabs: Latest (default), Unanswered, Solved. "More filters" holds challenge and tag; for the admin, priority and assignee too.
-- **FR-5** Search, category, tab, filters and page live in the URL.
-- **FR-6** Loading (skeleton), empty (with "Clear filters") and error (with "Try again") states. The result count is announced to screen readers.
-- **FR-7** Admin only: a "Needs attention" tab showing open threads that are unassigned or high or urgent priority.
+- **FR-1** Paginated list, 20 per page, ordered by latest activity. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. The excerpt is the opening post's content as plain text (Markdown stripped), falling back to the description. Resolved threads with an accepted answer show a check in the status. No internal IDs on screen.
+- **FR-2** Search in the top bar across topic and description, done by the server and debounced in the UI. It always searches questions: from any other page it opens the Community list with the query.
+- **FR-3** Left sidebar: Community with its 13 categories and thread counts, then Challenges, plus Insights for the admin. Counts are totals per category from `/api/meta` and do not change with the search or filters. Picking a category filters the list and renames the header. Challenge categories join the sidebar with the Challenges page (M2); until then Challenges is a plain link.
+- **FR-4** Intent tabs: Latest (default), Unanswered (status open), Solved (status resolved). "More filters" holds challenge and tag; for the admin, priority and assignee too. A challenge filter already in the URL shows as a removable chip with the challenge name; the challenge picker arrives with the challenges API (M2).
+- **FR-5** Search, category, tab, filters and page live in the URL. Switching to Learner removes the admin-only parameters (priority, assignee, the Needs attention tab) and falls back to Latest.
+- **FR-6** Loading (skeleton), empty (with "Clear filters") and error (with "Try again") states. "Clear filters" clears the search and every filter but keeps the tab. The result count is announced to screen readers.
+- **FR-7** Admin only: a "Needs attention" tab showing open threads that are unassigned or high or urgent priority. The server answers a learner's request for it with 403.
 
 ### Conversation detail
 
-- **FR-8** Header: a Q: marker and the title, the author with the date asked, status, the challenge (linked) with its difficulty, and tags. The opening post's upvotes read as "N people have this question too" (display only).
-- **FR-9** The accepted answer comes next, marked A: and "Accepted answer", or "Solved by the asker". Other replies follow in time order.
+- **FR-8** Header: a Q: marker and the title, the author with the date asked, status worded as in the list ("✓ Resolved" when there is an accepted answer), the challenge (linked) with its difficulty, and tags. The opening post's upvotes read as "N people have this question too" (display only).
+- **FR-9** The accepted answer comes next, marked A: and "Accepted answer", or "Solved by the asker". Other replies follow in time order. An answered thread without an accepted answer says "No accepted answer"; this label appears on the thread page only.
 - **FR-10** Each post: initials avatar, author, a badge for mentor, staff or support, date, body as safe Markdown, and "N people found this helpful".
-- **FR-11** Reply form with validation. On a locked thread it is replaced by an explanation.
+- **FR-11** One reply form at the bottom of the thread, with validation. On a locked thread it is replaced by an explanation. On phones the pinned Reply button scrolls to the form.
 - **FR-12** On their own threads, learners can mark an accepted answer and mark the thread solved.
 - **FR-13** Admin: a ⋯ menu in the header with status, priority, assignee, pin and lock. Each change shows a pending state and the server's refusal if it comes.
-- **FR-22** Right rail: "About this challenge" (difficulty, completion rate, attempts, hints, Open challenge) and "Related threads" on the same challenge. The sidebar collapses on this page; the breadcrumb keeps the place.
+- **FR-22** Right rail: "About this challenge" (title, with its category when the title repeats; difficulty, completion rate, attempts, hints, Open challenge) and "Related threads" on the same challenge. A hidden challenge is marked "Archived challenge" or "Draft challenge" as text. The sidebar is hidden on this page; the top bar's menu button opens it as a drawer, and the breadcrumb keeps the place.
 - **FR-14** (cut) Ask a question, from the list or a challenge. Before posting, show that challenge's hints and similar existing threads, to cut duplicate questions.
 
 ### Challenges
 
-- **FR-15** Challenge cards grouped by category. Each card: title, difficulty, one-line description, and how many questions are open. Search and a difficulty filter; drafts and archived hidden.
+- **FR-15** Challenge cards grouped by category. Each card: title (with its category when the title repeats), difficulty, one-line description, and how many questions are open. A difficulty filter covering all four levels (Beginner, Intermediate, Advanced, Expert); drafts and archived hidden. The page has no search of its own (cut; see the cut list). `includeHidden` is honoured for the admin only.
 - **FR-16** (cut) Challenge page: description, learning objectives, hints (collapsed), its threads with open ones first, and "Ask a question". If cut, the card opens the conversation list filtered to that challenge.
 
 ### Roles
 
-- **FR-17** Role switcher in the header with two options, Learner and Admin, remembered across reloads. Switching updates actions and navigation immediately.
+- **FR-17** Role switcher with two options, Learner and Admin, remembered across reloads: in the top bar at 900 px and wider, inside the drawer below that. Switching updates actions and navigation immediately.
 
 ### Insights (admin)
 
@@ -120,6 +120,8 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 
 Low-fidelity wireframes of the four screens, using real rows from the data. They fix layout, hierarchy and content, not pixels: spacing, exact sizes and the final colors come from the MUI theme. Where a wireframe and the text disagree, the text wins. Every screen is designed from one user job: a learner asking "has someone solved this?", and an admin asking "is support keeping up?". Anything that doesn't serve that job is one click away or gone.
 
+**Where the text supersedes the wireframes:** the Open chip is not blue (see Color below); the phone drawer lists all 13 categories, with no "7 more categories" row; the top-bar search always reads "Search questions"; the difficulty tabs include Expert; "Ask a question" appears only once the ask form exists (FR-14); the thread page has one reply form, and its status reads "✓ Resolved"; phone list rows keep the challenge name and last activity.
+
 ### Design direction
 
 - **Reference, not copy:** the data mirrors the PennyLane forum and the challenges page. We borrow their content model and connect the two, which today live on separate sites. Layout patterns draw on the PennyLane forum and various online forums: list rows with votes and excerpts, and question-and-answer threads.
@@ -128,7 +130,7 @@ Low-fidelity wireframes of the four screens, using real rows from the data. They
 - **Light theme**, chosen for reading long threads. A dark theme is a stretch goal; MUI makes it cheap.
 - **Votes and helpful counts are display only.** Voting would be a new data change and is listed under What's next.
 - **Type:** Atkinson Hyperlegible for all UI and body text, chosen for legibility, which fits the accessibility story. JetBrains Mono only inside code blocks.
-- **Color (MUI theme):** ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7. Status always pairs color with a word.
+- **Color (MUI theme):** ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7. Status: Open uses waiting, Answered neutral grey, Resolved solved (with ✓ when there is an accepted answer), Closed a grey outline. Action blue is for links and buttons only, never for status. Status always pairs color with a word.
 - **Copy:** plain words from the learner's side ("Ask a question", "Try again"), sentence case, no internal IDs on screen.
 
 ### Community list
@@ -161,7 +163,7 @@ Below 900 px the sidebar becomes a slide-in menu and every screen becomes one co
 
 | Screen | 1200 px and wider | 900–1199 px | Below 900 px (phones, small tablets) |
 | --- | --- | --- | --- |
-| Navigation | Sidebar always visible | Sidebar always visible | Menu button opens the sidebar as a drawer from the left |
+| Navigation | Sidebar always visible, except on the thread page, where the menu button opens it as a drawer | Same | Menu button opens the sidebar as a drawer from the left, listing all 13 categories and holding the role switcher |
 | Community list | Full rows: vote column, avatar, two-line excerpt | Same | Avatar and vote column hidden; votes join the status line; one-line excerpt; tabs scroll sideways; More filters opens a bottom sheet |
 | Thread | Thread plus right rail | Rail moves below the thread | Challenge becomes a compact strip under the title; related threads follow the replies; Reply button stays pinned to the bottom |
 | Challenges | Two cards per category row, arrows scroll sideways | Same | One card per row, swipe sideways within a category |
@@ -194,19 +196,22 @@ The data has inconsistencies that look deliberate. Normalization runs once, when
 | --- | --- | --- |
 | Posts not in time order | 449 of 800 conversations | Sort posts by timestamp |
 | Same user posts under different roles | 20 users | Keep the role per post as "role at time of posting"; never derive a user's role |
-| Status "answered" with no accepted answer | 105 conversations | Keep status as given; show "No accepted answer". Report the count in insights rather than rewrite the data |
+| Status "answered" with no accepted answer | 105 conversations | Keep status as given; the thread page shows "No accepted answer" |
 | Topic titles repeat | 723 of 800 share a title | Key everything on `identifier`. No IDs on screen: rows are told apart by excerpt, challenge and date |
-| Missing description | 60 conversations | Fall back to the first post's content |
+| Missing description | 60 conversations | Fall back to the opening post's content (the earliest post after sorting) |
+| Descriptions restate record fields | Status and priority in 333 conversations (170 inline, 163 in a triage table); an internal ID in 521 (confirm in tests) | Strip the lines and table rows that restate status, priority, category, topic, tags or an internal ID. Priority is admin only and search reads the description, so nothing of it may reach a learner through display or search |
+| `post_id` repeats across conversations | Values 1 to 12 | A post is identified by its conversation and `post_id` together |
+| Posts share a timestamp | 8 conversations | Break ties by `post_id` |
 | `points` stored as a string | 1 challenge (CHAL\_022) | Convert to a number |
-| Challenge titles repeat | 13 titles (counted by hand; confirm in tests) | Key on `challenge_id`; show category beside the title |
-| Draft or archived challenges that have conversations | 18 challenges | Hidden from the challenge list by default; their conversations stay visible with a status badge |
+| Challenge titles repeat | 13 titles (counted by hand; confirm in tests) | Key on `challenge_id`; show the category beside a repeated title on cards and in the thread rail |
+| Draft or archived challenges that have conversations | 18 challenges | Hidden from the challenge list by default; their conversations stay visible, and the thread rail says "Archived challenge" or "Draft challenge" |
 | No assignee | 164 conversations | `null` means unassigned; filterable |
 | No resolution time | 375 conversations (open and answered) | Resolution metrics use resolved and closed conversations only |
 | Markdown in descriptions | Most conversations and challenges | Render with `react-markdown`, raw HTML off |
 
 Verified links: every conversation's `challenge_id` exists, `participants` matches the post authors, and `created_at` matches the earliest post. But `last_activity_at` comes from the last post *in file order*, not the latest one, so it is wrong for 267 conversations. Rule: recompute it from the latest post after sorting. The default sort, latest activity, depends on this.
 
-Found while drawing the screens: in 48 conversations the accepted answer is the opening post itself. Rule: keep it, label it "Solved by the asker", and add a unit test so the UI doesn't assume the answer is a reply.
+Found while drawing the screens: in 48 conversations the accepted answer is the opening post itself. Rule: keep it, label it "Solved by the asker", and add a unit test so the UI doesn't assume the answer is a reply. These cases only appear after sorting: in file order the accepted answer is never the first post. Rule order: sort the posts first, then derive the opening post, the accepted answer, the description fallback and the last activity, with a unit test for that order.
 
 ## Mock API contract
 
@@ -214,17 +219,19 @@ All endpoints live under `/api` and are served by MSW handlers. Each handler is 
 
 | Method and path | Purpose | Parameters and rules |
 | --- | --- | --- |
-| `GET /api/conversations` | Paged, filtered list | `q`, `category`, `tab` (latest, unanswered, solved, attention²), `challengeId`, `tag`, `priority`¹, `assignee`¹, `sort`, `page`, `pageSize` (max 50) |
+| `GET /api/conversations` | Paged, filtered list | `q`, `category`, `tab` (latest, unanswered, solved, attention²), `challengeId`, `tag`, `priority`¹, `assignee`¹, `page`, `pageSize` (max 50). Ordered by latest activity |
 | `GET /api/conversations/:id` | One conversation with its posts | 404 if unknown |
 | `POST /api/conversations` | Start a conversation | 400 on missing topic, challenge or description |
 | `POST /api/conversations/:id/posts` | Reply | 409 if locked; 400 if empty |
 | `PATCH /api/conversations/:id` | Status, assignee, priority, pinned, locked, accepted post | 403 if the role may not change that field |
-| `GET /api/challenges` | Paged, filtered challenges | `q`, `difficulty`, `category`, `includeHidden`, `page`, `pageSize` |
-| `GET /api/challenges/:id` | One challenge with conversation counts | 404 if unknown |
+| `GET /api/challenges` | Paged, filtered challenges | `q`, `difficulty`, `category`, `includeHidden`³, `page`, `pageSize` |
+| `GET /api/challenges/:id` | One challenge with its open-question count | 404 if unknown |
 | `GET /api/insights` | Aggregated metrics for the admin page | 403 unless admin |
-| `GET /api/meta` | Options for filter menus: categories, tags, assignees | None |
+| `GET /api/meta` | Options for menus: the 13 community categories with thread counts, tags, assignees | None |
 
-¹ Ignored unless the viewer is admin. ² `attention` is admin only: open threads that are unassigned or high or urgent priority; a learner gets 403.
+¹ Ignored unless the viewer is admin. ² `attention` is admin only: open threads that are unassigned or high or urgent priority; a learner gets 403. ³ Honoured for the admin only.
+
+A page past the end returns empty `items` with the real `total`. Unknown parameter values fall back to their defaults.
 
 Data changes stay in memory and reset on reload. If time allows, the in-memory data persists to `sessionStorage` so a demo survives a refresh.
 
@@ -233,6 +240,8 @@ Data changes stay in memory and reset on reload. If time allows, the in-memory d
 ![Data flow: browser app and mock server](wireframes/architecture.png)
 
 Every read and write crosses a real HTTP boundary. Swapping in a real backend removes the right-hand column and changes no app code.
+
+Routes: `/` is the Community list, `/threads/:id` a thread, `/challenges` the challenge cards and `/insights` the admin page.
 
 ## Milestones
 
@@ -244,27 +253,28 @@ Five milestones, each ending in a working state that could be submitted. Every d
 - [x] Review this doc and adjust
 - [x] Write `AGENTS.md` (stack, structure, conventions, data rules), `CLAUDE.md` importing it, and `DECISIONS.md`
 - [x] Create the GitHub repo
-- [ ] Commit the brief's data files (`data/`), the docs and the wireframes
+- [x] Commit the brief's data files (`data/`), the docs and the wireframes
 
 **Done when:** the repo exists with `AGENTS.md`, `CLAUDE.md`, `DECISIONS.md`, this document with its wireframes, a README stub and the data.
 
 ### M1 · Foundation and conversation list
 
-- [ ] Scaffold: Vite, React, TypeScript strict, MUI theme, ESLint, Prettier, Vitest
-- [ ] Types, normalization and their unit tests
-- [ ] In-memory data, query functions (filter, sort, page) and their unit tests
-- [ ] MSW handlers for conversations and meta, plus the API client and TanStack Query hooks
-- [ ] Role context and switcher; app shell with navigation
-- [ ] Community list: FR-1 to FR-7
+- [ ] Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
+- [ ] Domain types, normalization and `can()`, with unit tests
+- [ ] Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
+- [ ] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
+- [ ] App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
+- [ ] Community list: rows, paging, states, live region, sidebar categories, intent tabs (FR-1, FR-3 to FR-7)
+- [ ] Search and More filters: tag, challenge chip; priority and assignee for the admin (FR-2, FR-4, FR-5)
 
 **Done when:** the list filters, searches and pages through the mock server with state in the URL; loading, empty and error states work; unit tests pass.
 
 ### M2 · Conversation detail, actions, challenges
 
 - [ ] Thread page and context rail: FR-8 to FR-10, FR-22
-- [ ] Reply and learner actions: FR-11, FR-12
+- [ ] Reply and learner actions: FR-11, FR-12, with the demo learner picked from the data
 - [ ] Admin ⋯ menu with server-side 403s: FR-13
-- [ ] Challenge cards: FR-15
+- [ ] Challenge cards: FR-15, with the challenge categories in the sidebar (FR-3) and the challenge picker in More filters (FR-4)
 - [ ] Component tests for replying and role gating
 
 **Done when:** each role can be demoed end to end, and a forbidden action is blocked by the server even if the UI were bypassed.
@@ -298,6 +308,8 @@ Five milestones, each ending in a working state that could be submitted. Every d
 5. `sessionStorage` persistence
 6. Charts reduced from four to two, keeping the summary tiles
 7. The ask form itself (FR-14); replying stays
+
+**Already cut:** search on the Challenges page (was part of FR-15). The top-bar search always searches questions (FR-2), and a second search field on one page was not worth its states and tests. The `q` parameter on `GET /api/challenges` stays for the challenge picker. Listed in the README under What's next.
 
 **Never cut:** normalization tests, state in the URL, server-enforced roles, README and decision log.
 

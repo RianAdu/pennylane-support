@@ -13,14 +13,14 @@ PennyLane Support: a learner-first support platform for PennyLane coding challen
 
 ## Stack
 
-- Vite + React 19 + TypeScript (`strict: true`, no `any`)
-- MUI (Material UI) with a custom theme; MUI X Charts (free version) for charts
+- Vite (`@vitejs/plugin-react`) + React 19 + TypeScript (`strict: true`, no `any`)
+- MUI (Material UI) with a custom theme, its peers `@emotion/react` and `@emotion/styled`, and `@mui/icons-material` for icons; MUI X Charts (free version) for charts
 - React Router v7 (library mode) for routes and URL search params
 - TanStack Query v5 for all server state
 - MSW v2 as the mock backend, in the browser and in tests
 - `react-markdown` for Markdown, raw HTML disabled
-- Vitest + Testing Library + jsdom for unit and component tests; Playwright + `@axe-core/playwright` for end-to-end and accessibility
-- ESLint + Prettier
+- Vitest + Testing Library (`react`, `user-event`, `jest-dom`) + jsdom for unit and component tests; Playwright + `@axe-core/playwright` for end-to-end and accessibility
+- ESLint (`typescript-eslint`, `eslint-plugin-react-hooks`) + Prettier
 - Fonts via `@fontsource`: Atkinson Hyperlegible (all UI), JetBrains Mono (code blocks only)
 
 Do not add a dependency that is not listed here without asking first, and record any approved addition in `DECISIONS.md`.
@@ -71,7 +71,7 @@ The request flow is: URL → component → TanStack Query hook → API client `f
 3. Swapping in a real backend must only remove `mocks/`. No app code may depend on the mock.
 4. Permissions live in one function, `can(role, action, context)` in `domain/permissions.ts`. The UI calls it to hide controls; handlers call it to return 403. Never duplicate permission logic.
 5. The viewer's role is sent on every request as the `X-Mock-Role` header.
-6. List state (search, category, tab, filters, sort, page) lives in URL search params, never in component or global state.
+6. List state (search, category, tab, filters, page) lives in URL search params, never in component or global state. Routes: `/` Community list, `/threads/:id` thread, `/challenges`, `/insights`.
 7. The only global client state is the current role: React context plus a `useRole()` hook, remembered in `localStorage`.
 8. Data changes use a pending state, then invalidate the affected queries. No optimistic updates.
 9. Handlers add a 200–500 ms delay in the browser and 0 ms in tests.
@@ -83,28 +83,30 @@ All list responses: `{ items, page, pageSize, total }`. `pageSize` max 50, defau
 
 | Method and path | Purpose | Rules |
 | --- | --- | --- |
-| `GET /api/conversations` | Paged list | `q`, `category`, `tab` (latest, unanswered, solved, attention), `challengeId`, `tag`, `priority`*, `assignee`*, `sort`, `page`, `pageSize` |
+| `GET /api/conversations` | Paged list | `q`, `category`, `tab` (latest, unanswered, solved, attention), `challengeId`, `tag`, `priority`*, `assignee`*, `page`, `pageSize`. Ordered by latest activity; there is no `sort` parameter |
 | `GET /api/conversations/:id` | Thread with posts | 404 if unknown |
 | `POST /api/conversations` | Ask a question | 400 on missing fields |
 | `POST /api/conversations/:id/posts` | Reply | 400 if empty; 409 if locked |
 | `PATCH /api/conversations/:id` | status, assignee, priority, pinned, locked, acceptedPostId | 403 via `can()` |
-| `GET /api/challenges` | Paged, filtered | `q`, `difficulty`, `category`, `includeHidden` |
+| `GET /api/challenges` | Paged, filtered | `q`, `difficulty`, `category`, `includeHidden` (admin only) |
 | `GET /api/challenges/:id` | One challenge with open-question count | 404 if unknown |
 | `GET /api/insights` | Aggregated metrics | 403 unless admin |
-| `GET /api/meta` | Categories, tags, assignees for menus | |
+| `GET /api/meta` | The 13 community categories with thread counts, tags, assignees for menus | |
 
-\* Ignored unless the role is admin. The `attention` tab is admin only: open threads that are unassigned or high or urgent priority.
+\* Ignored unless the role is admin. The `attention` tab is admin only: open threads that are unassigned or high or urgent priority; a learner gets 403. A page past the end returns empty `items` with the real `total`. Unknown parameter values fall back to their defaults.
 
 ## Data normalization rules
 
 Normalization runs once when the store loads. Every rule has a unit test in `domain/normalize.test.ts`.
 
-- Sort posts by timestamp (449 of 800 conversations are out of order).
+- Sort posts by timestamp (449 of 800 conversations are out of order); break ties by `post_id` (8 conversations).
+- Sort first. The opening post, the accepted answer, the description fallback and `lastActivityAt` are all derived from the sorted posts, and a test covers that order.
 - Recompute `lastActivityAt` from the latest post after sorting (267 conversations are wrong in the source).
 - Keep `user_role` per post as "role at time of posting"; never derive a user's role (20 users have several roles).
-- Missing `description` (60): fall back to the first post's content.
+- Missing `description` (60): fall back to the opening post's content.
+- Strip embedded metadata from descriptions: the lines and table rows that restate status, priority, category, topic, tags or an internal ID (status and priority in 333 descriptions, an ID in 521; confirm in tests). Priority is admin only and search reads the description, so none of it may reach a learner through display or search.
 - `points` may be a string (CHAL_022): convert to a number.
-- Key everything on IDs. Topic titles repeat (723 of 800 share one) and challenge titles repeat.
+- Key everything on IDs. Topic titles repeat (723 of 800 share one) and challenge titles repeat. `post_id` is unique only inside its conversation, so a post is identified by conversation and `post_id` together.
 - Keep `status` as given. "Answered" without an accepted answer (105) stays "answered".
 - An accepted answer can be the opening post (48 conversations): label it "Solved by the asker".
 - `assigned_to: null` means unassigned (164).
@@ -113,13 +115,14 @@ Normalization runs once when the store loads. Every rule has a unit test in `dom
 
 ## UI and UX rules
 
-- **Layout:** top bar (brand, search, role switcher); labelled left sidebar (Community with its 13 categories, Challenges with its categories, Insights for admin). The active section expands.
-- **Community list:** intent tabs Latest, Unanswered, Solved (plus Needs attention for admin). Row: vote count (display only), initials avatar, title, two-line excerpt, status chip, challenge name, reply count, last activity. "More filters" holds the rest.
-- **Thread page:** Q: marker and title; "N people have this question too" from the opening post's upvotes; accepted answer directly under the question, marked A:; other replies in time order; right rail with "About this challenge" and "Related threads". Admin actions sit behind a ⋯ menu. The sidebar collapses on this page; the breadcrumb keeps the place.
-- **Challenges:** a row of cards per category, scrolled with arrow buttons; each card shows open-question count.
+- **Layout:** top bar (brand, search, role switcher); labelled left sidebar (Community with its 13 categories, Challenges with its categories, Insights for admin). The active section expands. Search always searches questions and opens the Community list with `q`. Until M2 the Challenges entry is a plain link without its categories.
+- **Community list:** intent tabs Latest, Unanswered (status open), Solved (status resolved), plus Needs attention for admin. Ordered by latest activity: no sort control, and pinned does not change the order. Row: vote count (display only), initials avatar, title, two-line excerpt (the opening post as plain text, description as fallback), status chip, challenge name, reply count, last activity. "More filters" holds the rest; a `challengeId` in the URL shows as a removable chip. Sidebar counts are totals from `/api/meta`. On a switch to Learner, drop the admin-only params and fall back to Latest. No "Ask a question" button until the ask form exists.
+- **Thread page:** Q: marker and title; "N people have this question too" from the opening post's upvotes; accepted answer directly under the question, marked A:; other replies in time order; right rail with "About this challenge" and "Related threads". Admin actions sit behind a ⋯ menu. The sidebar is hidden on this page; the top bar's menu button opens it as a drawer, and the breadcrumb keeps the place. Tags sit in the header. One reply form, at the bottom. An answered thread without an accepted answer says "No accepted answer" (thread page only). The rail marks a hidden challenge "Archived challenge" or "Draft challenge" as text.
+- **Challenges:** a row of cards per category, scrolled with arrow buttons; each card shows open-question count. The difficulty filter covers Beginner, Intermediate, Advanced and Expert; the page has no search of its own. A repeated challenge title shows its category beside it, on cards and in the thread rail.
 - **Insights:** four tiles, then four charts, each with a one-line text summary.
-- **Responsive:** MUI breakpoints. Below 900 px the sidebar becomes a temporary Drawer opened from a menu button; every screen is one column; the thread's Reply button stays pinned to the bottom.
+- **Responsive:** MUI breakpoints. Below 900 px the sidebar becomes a temporary Drawer opened from a menu button, listing all 13 categories and holding the role switcher (which sits in the top bar at 900 px and wider); every screen is one column; list rows keep the challenge name and last activity; the thread's Reply button stays pinned to the bottom and scrolls to the reply form.
 - **Theme:** light. Ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7. Lists are rows separated by rules, not stacks of cards.
+- **Status colours:** Open = waiting, Answered = neutral grey, Resolved = solved, with ✓ only when there is an accepted answer, Closed = grey outline. Action blue is for links and buttons, never for status.
 - **Copy:** sentence case, plain words from the learner's side ("Ask a question", "Try again"). No internal IDs on screen. Errors say what happened and what to do.
 - **Votes and helpful counts are display only.**
 
@@ -138,7 +141,7 @@ Normalization runs once when the store loads. Every rule has a unit test in `dom
 - Unit tests: `domain/` (normalize, permissions) and `mocks/queries/` (filter, sort, paginate, insights).
 - Component tests: render through the real MSW handlers (via `setupServer`), not mocked hooks. Cover list filtering and tabs, replying, role gating and a 403 shown to the user.
 - One Playwright run: filter the list, open a thread, reply. Run an axe check on each main page.
-- Name tests after behaviour and reference the requirement: `it('hides priority from learners (FR-1)')`.
+- Name tests after behaviour and reference the requirement: `it('hides priority from learners (FR-4)')`.
 - Never weaken or delete a test to make it pass. A failing test means fix the code or ask.
 
 ## Working agreement for agents
@@ -150,4 +153,4 @@ Normalization runs once when the store loads. Every rule has a unit test in `dom
 5. **Decisions:** when you choose between real alternatives, add a row to `DECISIONS.md` (decision, rejected, why).
 6. **Ask, don't assume,** when a requirement is unclear or two rules conflict.
 7. **Don't touch** `data/` raw files, and don't change the API contract or folder structure without asking.
-8. **Stay in scope.** Out of scope: authentication, real voting, a moderator role, dark theme, optimistic updates. Cut list, in order: ask-flow hints, challenge page, related threads, pin and lock, sessionStorage persistence, charts 4 → 2, the ask form itself.
+8. **Stay in scope.** Out of scope: authentication, real voting, a moderator role, dark theme, optimistic updates, search on the Challenges page. Cut list, in order: ask-flow hints, challenge page, related threads, pin and lock, sessionStorage persistence, charts 4 → 2, the ask form itself.
