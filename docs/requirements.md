@@ -190,7 +190,7 @@ Only the list and the thread page get phone wireframes, because they change stru
 
 ## Data findings and normalization rules
 
-The data has inconsistencies that look deliberate. Normalization runs once, when the mock server loads the JSON, and every rule gets a unit test. The source files are never edited.
+The data has inconsistencies that look deliberate. Normalization runs once, when the mock server loads the JSON, and every rule that changes data gets a unit test; a rule that keeps a value as given is held by the types. The sizes below were checked against the files on Oct 8; they are documented here, not pinned in tests. The source files are never edited.
 
 | Finding | Size | Rule |
 | --- | --- | --- |
@@ -200,12 +200,12 @@ The data has inconsistencies that look deliberate. Normalization runs once, when
 | Status "answered" with no accepted answer | 105 conversations | Keep status as given; the thread page shows "No accepted answer" |
 | Topic titles repeat | 723 of 800 share a title | Key everything on `identifier`. No IDs on screen: rows are told apart by excerpt, challenge and date |
 | Missing description | 60 conversations | Fall back to the opening post's content (`post_id` 1) |
-| Descriptions restate record fields | Status and priority in 333 conversations (170 inline, 163 in a triage table); an internal ID in 521 (confirm in tests) | Strip the lines and table rows that restate status, priority, category, topic, tags or an internal ID. Priority is admin only and search reads the description, so nothing of it may reach a learner through display or search. Then remove what is left behind: the "Triage notes" heading, a heading with nothing under it, an empty code fence and a bare line repeating the topic (333) |
+| Descriptions restate record fields | Status and priority in 333 conversations (170 inline, 163 in a triage table); an internal ID in 521 | Strip the lines and table rows that restate status, priority, category, topic, tags or an internal ID. Priority is admin only and search reads the description, so nothing of it may reach a learner through display or search. Then remove what is left behind: the "Triage notes" heading, a heading with nothing under it, an empty code fence and a bare line repeating the topic (333) |
 | An internal ID typed by the asker | 10 conversations mention a challenge ID in a post; 9 of their descriptions quote it | Leave it: post content is never rewritten. "No IDs on screen" covers the interface and the stripped metadata, not what a learner wrote |
 | `post_id` repeats across conversations | Values 1 to 12 | A post is identified by its conversation and `post_id` together |
 | Posts share a timestamp | 8 conversations | Break ties by `post_id` |
 | `points` stored as a string | 1 challenge (CHAL\_022) | Convert to a number |
-| Challenge titles repeat | 13 titles (counted by hand; confirm in tests) | Key on `challenge_id`; show the category beside a repeated title on cards and in the thread rail |
+| Challenge titles repeat | 13 titles, never twice in one category | Key on `challenge_id`; show the category beside a repeated title on cards and in the thread rail |
 | Draft or archived challenges that have conversations | 18 challenges | Hidden from the challenge list by default; their conversations stay visible, and the thread rail says "Archived challenge" or "Draft challenge" |
 | No assignee | 164 conversations | `null` means unassigned; filterable |
 | No resolution time | 375 conversations (open and answered) | Resolution metrics use resolved and closed conversations only |

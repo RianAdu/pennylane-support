@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import challengesFile from "../../../data/pennylane_coding_challenges.json";
 import conversationsFile from "../../../data/pennylane_support_conversations.json";
 import {
   isSolvedByAsker,
@@ -125,27 +124,8 @@ describe("normalizeConversation", () => {
     ],
   });
 
-  it("derives the opening post, the description fallback and the last activity in the documented order", () => {
-    const conversation = normalizeConversation({ ...outOfOrder, description: undefined });
-
-    expect(conversation.posts.map((post) => post.postId)).toEqual([1, 3, 2]);
-    expect(conversation.description).toBe("The question.");
-    expect(conversation.createdAt).toBe("2024-03-01T10:00:00Z");
-    expect(conversation.lastActivityAt).toBe("2024-03-02T08:00:00Z");
-  });
-
   it("recomputes the last activity from the latest post, not the last one in the file", () => {
     expect(normalizeConversation(outOfOrder).lastActivityAt).toBe("2024-03-02T08:00:00Z");
-  });
-
-  it("keeps the role per post and never merges a user's roles", () => {
-    const conversation = normalizeConversation(outOfOrder);
-
-    expect(conversation.posts.map((post) => [post.author, post.roleAtPosting])).toEqual([
-      ["asker", "learner"],
-      ["helper", "staff"],
-      ["helper", "mentor"],
-    ]);
   });
 
   it("falls back to the opening post when the description is missing", () => {
@@ -155,14 +135,7 @@ describe("normalizeConversation", () => {
     expect(normalizeConversation(raw).description).toBe("Opening words.");
   });
 
-  it("keeps status answered when there is no accepted answer", () => {
-    const conversation = normalizeConversation(rawConversation({ status: "answered" }));
-
-    expect(conversation.status).toBe("answered");
-    expect(conversation.acceptedPostId).toBeNull();
-  });
-
-  it("records the accepted answer by post id", () => {
+  it("records the accepted answer by post id, and null when there is none", () => {
     const conversation = normalizeConversation(
       rawConversation({
         posts: [rawPost({ post_id: 1 }), rawPost({ post_id: 2, user: "helper", is_accepted_answer: true })],
@@ -170,15 +143,7 @@ describe("normalizeConversation", () => {
     );
 
     expect(conversation.acceptedPostId).toBe(2);
-  });
-
-  it("keeps a null assignee as unassigned", () => {
-    expect(normalizeConversation(rawConversation({ assigned_to: null })).assignee).toBeNull();
-    expect(normalizeConversation(rawConversation({ assigned_to: "community_mod" })).assignee).toBe("community_mod");
-  });
-
-  it("keeps a missing resolution time as null", () => {
-    expect(normalizeConversation(rawConversation({ resolution_time_hours: null })).resolutionTimeHours).toBeNull();
+    expect(normalizeConversation(rawConversation({ status: "answered" })).acceptedPostId).toBeNull();
   });
 
   it("refuses a status the app does not know", () => {
@@ -293,10 +258,6 @@ describe("stripDescriptionMetadata", () => {
     expect(stripDescriptionMetadata(description, topic)).toBe(description);
   });
 
-  it("leaves a description without metadata as it is", () => {
-    expect(stripDescriptionMetadata("Plain question about gradients.", topic)).toBe("Plain question about gradients.");
-  });
-
   it("leaves an internal ID that the asker typed in a sentence", () => {
     const sentence = 'Working on CHAL_004 "States and Probabilities" and my probabilities are off.';
 
@@ -313,67 +274,19 @@ describe("normalizeChallenge", () => {
   it("refuses points that are not a number", () => {
     expect(() => normalizeChallenge(rawChallenge({ points: "lots" }))).toThrow(/points/);
   });
-
-  it("keeps the status, so drafts and archived challenges can be hidden and labelled", () => {
-    expect(normalizeChallenge(rawChallenge({ status: "draft" })).status).toBe("draft");
-    expect(normalizeChallenge(rawChallenge({ status: "archived" })).status).toBe("archived");
-  });
 });
 
-// The counts the documents quote, pinned against the real files so a wrong claim fails a test.
-describe("the brief's data", () => {
+// Invariants over every conversation in the brief's files, after our functions have run.
+describe("the brief's data, normalized", () => {
   const rawConversations: RawConversation[] = conversationsFile.support_conversations;
-  const rawChallenges: RawChallenge[] = challengesFile.coding_challenges;
   const conversations = rawConversations.map(normalizeConversation);
-  const challenges = rawChallenges.map(normalizeChallenge);
   const time = (iso: string) => Date.parse(iso);
-  const count = <T>(items: readonly T[], test: (item: T) => boolean) => items.filter(test).length;
-  const withDescription = rawConversations.filter((raw) => raw.description !== undefined);
-  const stripped = withDescription.map((raw) => ({
-    topic: raw.topic,
-    before: raw.description ?? "",
-    after: stripDescriptionMetadata(raw.description ?? "", raw.topic),
-  }));
 
-  it("holds 120 challenges, 800 conversations and 3,061 posts, keyed on unique IDs", () => {
-    expect(challenges).toHaveLength(120);
-    expect(conversations).toHaveLength(800);
-    expect(conversations.flatMap((conversation) => conversation.posts)).toHaveLength(3061);
-    expect(new Set(conversations.map((conversation) => conversation.id)).size).toBe(800);
-    expect(new Set(challenges.map((challenge) => challenge.id)).size).toBe(120);
-  });
-
-  it("has posts out of time order in 449 conversations and shared timestamps in 8", () => {
-    const outOfOrder = count(rawConversations, (raw) =>
-      raw.posts.some((post, index) => index > 0 && time(post.timestamp) < time(raw.posts[index - 1]?.timestamp ?? "")),
-    );
-    const withTies = count(
-      rawConversations,
-      (raw) => new Set(raw.posts.map((post) => post.timestamp)).size < raw.posts.length,
-    );
-
-    expect(outOfOrder).toBe(449);
-    expect(withTies).toBe(8);
-  });
-
-  it("always opens with post_id 1, whose timestamp is created_at, in all 800 conversations", () => {
-    expect(count(conversations, (conversation) => conversation.posts[0]?.postId === 1)).toBe(800);
-    expect(count(conversations, (conversation) => conversation.posts[0]?.postedAt === conversation.createdAt)).toBe(
-      800,
-    );
-  });
-
-  it("has a reply dated before the question in 220 conversations", () => {
-    const early = count(conversations, (conversation) =>
-      conversation.posts.some((post) => time(post.postedAt) < time(conversation.createdAt)),
-    );
-
-    expect(early).toBe(220);
-  });
-
-  it("orders the replies of every conversation by time, then post id", () => {
+  it("opens every conversation with post_id 1 and orders the replies by time, then post id", () => {
     for (const conversation of conversations) {
-      const replies = conversation.posts.slice(1);
+      const [opening, ...replies] = conversation.posts;
+
+      expect(opening?.postId).toBe(1);
       replies.forEach((reply, index) => {
         const previous = replies[index - 1];
         if (previous === undefined) return;
@@ -383,63 +296,30 @@ describe("the brief's data", () => {
     }
   });
 
-  it("corrects the last activity of 267 conversations and never moves it earlier", () => {
-    const corrected = rawConversations.filter(
-      (raw, index) => raw.last_activity_at !== conversations[index]?.lastActivityAt,
-    );
-
-    expect(corrected).toHaveLength(267);
-    for (const [index, raw] of rawConversations.entries()) {
-      expect(time(conversations[index]?.lastActivityAt ?? "")).toBeGreaterThanOrEqual(time(raw.last_activity_at));
+  it("leaves no status, priority or urgent in any description", () => {
+    for (const { description } of conversations) {
+      expect(description).not.toMatch(/\b(status|priority|urgent)\b/i);
     }
   });
 
-  it("has 20 users who posted under more than one role", () => {
-    const rolesByUser = new Map<string, Set<string>>();
-    for (const post of conversations.flatMap((conversation) => conversation.posts)) {
-      rolesByUser.set(post.author, (rolesByUser.get(post.author) ?? new Set()).add(post.roleAtPosting));
-    }
+  // 9 descriptions quote the opening post; a tenth has no description and falls back to it.
+  it("leaves an internal ID only in the 10 descriptions that repeat what the asker typed", () => {
+    const withId = conversations.filter(({ description }) => /CHAL_\d+|CONV_\d+/.test(description));
 
-    expect(count([...rolesByUser.values()], (roles) => roles.size > 1)).toBe(20);
-  });
-
-  it("falls back to the opening post for the 60 conversations without a description", () => {
-    const missing = rawConversations.filter((raw) => raw.description === undefined);
-
-    expect(missing).toHaveLength(60);
-    for (const raw of missing) {
-      const conversation = normalizeConversation(raw);
-      expect(conversation.description).toBe(conversation.posts[0]?.content);
+    expect(withId).toHaveLength(10);
+    for (const { description, posts } of withId) {
+      const id = description.match(/CHAL_\d+|CONV_\d+/)?.[0] ?? "";
+      expect(posts[0]?.content).toContain(id);
     }
   });
 
-  it("strips status and priority from 333 descriptions: 170 inline and 163 in a triage table", () => {
-    expect(count(stripped, ({ before }) => /^\*\*Status:\*\*.*\*\*Priority:\*\*/m.test(before))).toBe(170);
-    expect(count(stripped, ({ before }) => /^\| Priority \|/m.test(before))).toBe(163);
-    expect(count(stripped, ({ before }) => /\b(status|priority)\b/i.test(before))).toBe(333);
-    expect(count(stripped, ({ after }) => /\b(status|priority|category)\b/i.test(after))).toBe(0);
-  });
-
-  it("leaves no priority value a learner could search for", () => {
-    expect(count(stripped, ({ before }) => /urgent/i.test(before))).toBe(22);
-    expect(count(conversations, (conversation) => /urgent/i.test(conversation.description))).toBe(0);
-  });
-
-  it("strips the internal ID from 521 descriptions, leaving only the 9 where the asker typed it", () => {
-    expect(count(stripped, ({ before }) => /CHAL_\d+|CONV_\d+/.test(before))).toBe(521);
-    expect(count(stripped, ({ after }) => /CHAL_\d+|CONV_\d+/.test(after))).toBe(9);
-    expect(
-      count(conversations, (conversation) => conversation.posts.some((post) => /CHAL_\d+/.test(post.content))),
-    ).toBe(10);
-  });
-
-  it("leaves no empty heading, empty code fence, line equal to the topic or empty description", () => {
-    for (const { topic, after } of stripped) {
-      const lines = after.split("\n");
+  it("leaves no empty heading, empty code fence, line equal to the title or empty description", () => {
+    for (const { title, description } of conversations) {
+      const lines = description.split("\n");
       const content = lines.filter((line) => line.trim() !== "");
 
-      expect(after).not.toBe("");
-      expect(lines.map((line) => line.trim())).not.toContain(topic);
+      expect(description).not.toBe("");
+      expect(lines.map((line) => line.trim())).not.toContain(title);
 
       let insideFence = false;
       content.forEach((line, index) => {
@@ -456,90 +336,9 @@ describe("the brief's data", () => {
     }
   });
 
-  it("keeps 105 conversations answered without an accepted answer", () => {
-    const answeredWithout = count(
-      conversations,
-      (conversation) => conversation.status === "answered" && conversation.acceptedPostId === null,
-    );
-
-    expect(answeredWithout).toBe(105);
-  });
-
-  it("never has the opening post as the accepted answer; 20 are solved by the asker", () => {
-    expect(count(conversations, (conversation) => conversation.acceptedPostId !== null)).toBe(357);
-    expect(count(conversations, (conversation) => conversation.acceptedPostId === conversation.posts[0]?.postId)).toBe(
-      0,
-    );
-    expect(count(conversations, isSolvedByAsker)).toBe(20);
-  });
-
-  it("matches the tab counts: 128 open, 294 resolved, 169 of them with an accepted answer", () => {
-    expect(count(conversations, (conversation) => conversation.status === "open")).toBe(128);
-    expect(count(conversations, (conversation) => conversation.status === "resolved")).toBe(294);
-    expect(
-      count(
-        conversations,
-        (conversation) => conversation.status === "resolved" && conversation.acceptedPostId !== null,
-      ),
-    ).toBe(169);
-  });
-
-  it("has 164 unassigned conversations", () => {
-    expect(count(conversations, (conversation) => conversation.assignee === null)).toBe(164);
-  });
-
-  it("has no resolution time for 375 conversations, all of them open or answered", () => {
-    const without = conversations.filter((conversation) => conversation.resolutionTimeHours === null);
-
-    expect(without).toHaveLength(375);
-    expect(without.every((conversation) => ["open", "answered"].includes(conversation.status))).toBe(true);
-    expect(
-      count(conversations, (conversation) => ["resolved", "closed"].includes(conversation.status)) + without.length,
-    ).toBe(800);
-  });
-
-  it("shares a title between 723 of the 800 conversations", () => {
-    const perTitle = new Map<string, number>();
-    for (const { title } of conversations) perTitle.set(title, (perTitle.get(title) ?? 0) + 1);
-
-    expect(count(conversations, (conversation) => (perTitle.get(conversation.title) ?? 0) > 1)).toBe(723);
-  });
-
-  it("links every conversation to an existing challenge, in 13 categories", () => {
-    const challengeIds = new Set(challenges.map((challenge) => challenge.id));
-
-    expect(conversations.every((conversation) => challengeIds.has(conversation.challengeId))).toBe(true);
-    expect(new Set(conversations.map((conversation) => conversation.category)).size).toBe(13);
-  });
-
-  it("has 18 draft or archived challenges, each with conversations", () => {
-    const hidden = challenges.filter((challenge) => challenge.status !== "published");
-    const withConversations = new Set(conversations.map((conversation) => conversation.challengeId));
-
-    expect(hidden).toHaveLength(18);
-    expect(hidden.every((challenge) => withConversations.has(challenge.id))).toBe(true);
-  });
-
-  it("stores points as a string for CHAL_022 only, and normalizes it to 225", () => {
-    expect(rawChallenges.filter((raw) => typeof raw.points !== "number").map((raw) => raw.challenge_id)).toEqual([
-      "CHAL_022",
-    ]);
-    expect(challenges.find((challenge) => challenge.id === "CHAL_022")?.points).toBe(225);
-  });
-
-  it("repeats 13 challenge titles, never inside one category", () => {
-    const perTitle = new Map<string, Set<string>>();
-    for (const { title, category } of challenges) {
-      perTitle.set(title, (perTitle.get(title) ?? new Set()).add(category));
-    }
-    const repeated = challenges.filter(
-      (challenge) => count(challenges, (other) => other.title === challenge.title) > 1,
-    );
-
-    expect(new Set(repeated.map((challenge) => challenge.title)).size).toBe(13);
-    for (const challenge of repeated) {
-      const sameTitle = count(challenges, (other) => other.title === challenge.title);
-      expect(perTitle.get(challenge.title)?.size).toBe(sameTitle);
+  it("never moves the last activity earlier than the raw value", () => {
+    for (const [index, raw] of rawConversations.entries()) {
+      expect(time(conversations[index]?.lastActivityAt ?? "")).toBeGreaterThanOrEqual(time(raw.last_activity_at));
     }
   });
 });

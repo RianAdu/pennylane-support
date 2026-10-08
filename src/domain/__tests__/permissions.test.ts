@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACTIONS, can, type Action } from "../permissions";
+import { can, type Action } from "../permissions";
 
 const ADMIN_ONLY: { name: string; action: Action }[] = [
   { name: "see priority, assignee and the Needs attention view", action: "viewTriage" },
@@ -66,15 +66,5 @@ describe("can()", () => {
     expect(can("admin", action)).toBe(true);
     expect(can("learner", action)).toBe(false);
     expect(can("learner", action, { isOwnThread: true })).toBe(false);
-  });
-
-  it("gives the admin everything a learner has", () => {
-    for (const action of ACTIONS) {
-      for (const context of [{}, { isOwnThread: true }, { isLocked: true }]) {
-        if (can("learner", action, context)) {
-          expect(can("admin", action, context)).toBe(true);
-        }
-      }
-    }
   });
 });

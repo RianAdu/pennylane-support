@@ -107,7 +107,7 @@ All list responses: `{ items, page, pageSize, total }`. `pageSize` max 50, defau
 
 ## Data normalization rules
 
-Normalization runs once when the store loads. Every rule has a unit test in `domain/__tests__/normalize.test.ts`.
+Normalization runs once when the store loads. Every rule that changes data has a unit test in `domain/__tests__/normalize.test.ts`; a rule that keeps a value as given is held by the types. The counts below were checked against the data on Oct 8 and are documented, not pinned in tests.
 
 - The opening post is `post_id` 1, never the earliest timestamp: in 220 conversations a reply is dated before the question, while `created_at` and the description follow `post_id` 1 in every conversation (D35). Keep `created_at` as given.
 - Sort the replies by timestamp (449 of 800 conversations are out of order); break ties by `post_id` (8 conversations).
@@ -115,7 +115,7 @@ Normalization runs once when the store loads. Every rule has a unit test in `dom
 - Recompute `lastActivityAt` from the latest post by timestamp (267 conversations are wrong in the source).
 - Keep `user_role` per post as "role at time of posting"; never derive a user's role (20 users have several roles).
 - Missing `description` (60): fall back to the opening post's content.
-- Strip embedded metadata from descriptions: the lines and table rows that restate status, priority, category, topic, tags or an internal ID (status and priority in 333 descriptions, an ID in 521; confirm in tests). Priority is admin only and search reads the description, so none of it may reach a learner through display or search. Then remove what the stripping leaves behind: the "Triage notes" heading, a heading with nothing under it, an empty code fence and a bare line repeating the topic.
+- Strip embedded metadata from descriptions: the lines and table rows that restate status, priority, category, topic, tags or an internal ID (status and priority in 333 descriptions, an ID in 521). Priority is admin only and search reads the description, so none of it may reach a learner through display or search. Then remove what the stripping leaves behind: the "Triage notes" heading, a heading with nothing under it, an empty code fence and a bare line repeating the topic.
 - Post content is never rewritten: 10 conversations mention a challenge ID in a sentence the asker typed, and it stays (D36).
 - `points` may be a string (CHAL_022): convert to a number.
 - Key everything on IDs. Topic titles repeat (723 of 800 share one) and challenge titles repeat. `post_id` is unique only inside its conversation, so a post is identified by conversation and `post_id` together.
