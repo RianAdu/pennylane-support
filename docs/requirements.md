@@ -264,7 +264,7 @@ Five milestones, each ending in a working state that could be submitted. Every d
 - [x] Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
 - [x] Domain types, normalization and `can()`, with unit tests
 - [x] Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
-- [ ] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
+- [x] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
 - [ ] App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
 - [ ] Community list: rows, paging, states, live region, sidebar categories, intent tabs (FR-1, FR-3 to FR-7)
 - [ ] Search and More filters: tag, challenge chip; priority and assignee for the admin (FR-2, FR-4, FR-5)

@@ -46,3 +46,24 @@ export type Meta = {
   /** Admin only: the key is absent from a learner's response. */
   assignees?: string[];
 };
+
+/** The request header that carries the viewer's role. A real backend would read the session instead. */
+export const ROLE_HEADER = "X-Mock-Role";
+
+/** The body of every non-2xx response. */
+export type ApiErrorBody = {
+  message: string;
+};
+
+/** What the app may send to `GET /api/conversations`. Anything left out takes the server's default. */
+export type ConversationListQuery = {
+  q?: string;
+  category?: string;
+  tab?: ConversationTab;
+  challengeId?: string;
+  tag?: string;
+  priority?: Priority;
+  assignee?: string;
+  page?: number;
+  pageSize?: number;
+};

@@ -12,7 +12,7 @@ const testTitle = (pattern) =>
   ].map((call) => `${call} > Literal.arguments:first-child[value=${pattern}]`);
 
 export default defineConfig([
-  globalIgnores(["dist", "coverage", "data"]),
+  globalIgnores(["dist", "coverage", "data", "public/mockServiceWorker.js"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [tseslint.configs.recommended, reactHooks.configs.flat.recommended],
