@@ -81,7 +81,7 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 
 ### Community: conversation list (home)
 
-- **FR-1** Paginated list, 20 per page, ordered by latest activity. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. The excerpt is the opening post's content as plain text (Markdown stripped), falling back to the description. Resolved threads with an accepted answer show a check in the status. No internal IDs on screen.
+- **FR-1** Paginated list, 20 per page, ordered by latest activity. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. The excerpt is the opening post's content, cut at a word boundary at 200 characters with an ellipsis; Markdown stripping and a description fallback wait until new questions can be posted (D24). Resolved threads with an accepted answer show a check in the status. No internal IDs on screen.
 - **FR-2** Search in the top bar across topic and description, done by the server and debounced in the UI. It always searches questions: from any other page it opens the Community list with the query.
 - **FR-3** Left sidebar: Community with its 13 categories and thread counts, then Challenges, plus Insights for the admin. Counts are totals per category from `/api/meta` and do not change with the search or filters. Picking a category filters the list and renames the header. Challenge categories join the sidebar with the Challenges page (M2); until then Challenges is a plain link.
 - **FR-4** Intent tabs: Latest (default), Unanswered (status open), Solved (status resolved). "More filters" holds challenge and tag; for the admin, priority and assignee too. A challenge filter already in the URL shows as a removable chip with the challenge name; the challenge picker arrives with the challenges API (M2).
@@ -190,7 +190,7 @@ Only the list and the thread page get phone wireframes, because they change stru
 
 ## Data findings and normalization rules
 
-The data has inconsistencies that look deliberate. Normalization runs once, when the mock server loads the JSON, and every rule that changes data gets a unit test; a rule that keeps a value as given is held by the types. The sizes below were checked against the files on Oct 8; they are documented here, not pinned in tests. The source files are never edited.
+The data has inconsistencies that look deliberate. Normalization runs once, when the mock server loads the JSON, and every rule that changes data gets a unit test; a rule that keeps a value as given is held by the types. The sizes below were checked against the files on Oct 8; they are documented here, not pinned in tests, except for the real-data check on the query functions (D38). The source files are never edited.
 
 | Finding | Size | Rule |
 | --- | --- | --- |
