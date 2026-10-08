@@ -1,0 +1,13 @@
+dist
+coverage
+package-lock.json
+node_modules
+
+# Raw data from the brief is never edited
+data
+
+# Hand-formatted documents
+docs
+AGENTS.md
+CLAUDE.md
+DECISIONS.md

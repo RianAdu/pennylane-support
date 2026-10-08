@@ -259,7 +259,7 @@ Five milestones, each ending in a working state that could be submitted. Every d
 
 ### M1 · Foundation and conversation list
 
-- [ ] Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
+- [x] Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
 - [ ] Domain types, normalization and `can()`, with unit tests
 - [ ] Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
 - [ ] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
