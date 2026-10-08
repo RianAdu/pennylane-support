@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import challengesFile from "../../data/pennylane_coding_challenges.json";
-import conversationsFile from "../../data/pennylane_support_conversations.json";
+import challengesFile from "../../../data/pennylane_coding_challenges.json";
+import conversationsFile from "../../../data/pennylane_support_conversations.json";
 import {
   isSolvedByAsker,
   normalizeChallenge,
   normalizeConversation,
   orderPosts,
   stripDescriptionMetadata,
-} from "./normalize";
-import type { RawChallenge, RawConversation, RawPost } from "./types";
+} from "../normalize";
+import type { RawChallenge, RawConversation, RawPost } from "../types";
 
-function rawPost(overrides: Partial<RawPost> = {}): RawPost {
+const rawPost = (overrides: Partial<RawPost> = {}): RawPost => {
   return {
     post_id: 1,
     user: "asker",
@@ -21,9 +21,9 @@ function rawPost(overrides: Partial<RawPost> = {}): RawPost {
     is_accepted_answer: false,
     ...overrides,
   };
-}
+};
 
-function rawConversation(overrides: Partial<RawConversation> = {}): RawConversation {
+const rawConversation = (overrides: Partial<RawConversation> = {}): RawConversation => {
   return {
     identifier: "CONV_TEST",
     topic: "Unexpected NaNs when measuring",
@@ -46,9 +46,9 @@ function rawConversation(overrides: Partial<RawConversation> = {}): RawConversat
     description: "My circuit returns NaN.",
     ...overrides,
   };
-}
+};
 
-function rawChallenge(overrides: Partial<RawChallenge> = {}): RawChallenge {
+const rawChallenge = (overrides: Partial<RawChallenge> = {}): RawChallenge => {
   return {
     challenge_id: "CHAL_TEST",
     title: "Begin Here",
@@ -70,11 +70,11 @@ function rawChallenge(overrides: Partial<RawChallenge> = {}): RawChallenge {
     prerequisite_challenge_ids: [],
     ...overrides,
   };
-}
+};
 
 const postIds = (posts: readonly { post_id: number }[]) => posts.map((post) => post.post_id);
 
-describe("post order (D35)", () => {
+describe("post order", () => {
   it("keeps post_id 1 as the opening post even when a reply has an earlier timestamp", () => {
     const posts = [
       rawPost({ post_id: 1, timestamp: "2024-03-01T10:00:00Z" }),
@@ -125,7 +125,7 @@ describe("normalizeConversation", () => {
     ],
   });
 
-  it("derives the opening post, the description fallback and the last activity in the documented order (D35)", () => {
+  it("derives the opening post, the description fallback and the last activity in the documented order", () => {
     const conversation = normalizeConversation({ ...outOfOrder, description: undefined });
 
     expect(conversation.posts.map((post) => post.postId)).toEqual([1, 3, 2]);
@@ -134,11 +134,11 @@ describe("normalizeConversation", () => {
     expect(conversation.lastActivityAt).toBe("2024-03-02T08:00:00Z");
   });
 
-  it("recomputes the last activity from the latest post, not the last one in the file (FR-1)", () => {
+  it("recomputes the last activity from the latest post, not the last one in the file", () => {
     expect(normalizeConversation(outOfOrder).lastActivityAt).toBe("2024-03-02T08:00:00Z");
   });
 
-  it("keeps the role per post and never merges a user's roles (FR-10)", () => {
+  it("keeps the role per post and never merges a user's roles", () => {
     const conversation = normalizeConversation(outOfOrder);
 
     expect(conversation.posts.map((post) => [post.author, post.roleAtPosting])).toEqual([
@@ -148,21 +148,21 @@ describe("normalizeConversation", () => {
     ]);
   });
 
-  it("falls back to the opening post when the description is missing (FR-1)", () => {
+  it("falls back to the opening post when the description is missing", () => {
     const raw = rawConversation({ posts: [rawPost({ content: "Opening words." })] });
     delete raw.description;
 
     expect(normalizeConversation(raw).description).toBe("Opening words.");
   });
 
-  it("keeps status answered when there is no accepted answer (FR-9)", () => {
+  it("keeps status answered when there is no accepted answer", () => {
     const conversation = normalizeConversation(rawConversation({ status: "answered" }));
 
     expect(conversation.status).toBe("answered");
     expect(conversation.acceptedPostId).toBeNull();
   });
 
-  it("records the accepted answer by post id (FR-9)", () => {
+  it("records the accepted answer by post id", () => {
     const conversation = normalizeConversation(
       rawConversation({
         posts: [rawPost({ post_id: 1 }), rawPost({ post_id: 2, user: "helper", is_accepted_answer: true })],
@@ -172,12 +172,12 @@ describe("normalizeConversation", () => {
     expect(conversation.acceptedPostId).toBe(2);
   });
 
-  it("keeps a null assignee as unassigned (FR-7)", () => {
+  it("keeps a null assignee as unassigned", () => {
     expect(normalizeConversation(rawConversation({ assigned_to: null })).assignee).toBeNull();
     expect(normalizeConversation(rawConversation({ assigned_to: "community_mod" })).assignee).toBe("community_mod");
   });
 
-  it("keeps a missing resolution time as null (FR-18)", () => {
+  it("keeps a missing resolution time as null", () => {
     expect(normalizeConversation(rawConversation({ resolution_time_hours: null })).resolutionTimeHours).toBeNull();
   });
 
@@ -186,7 +186,7 @@ describe("normalizeConversation", () => {
   });
 });
 
-describe("isSolvedByAsker (FR-9)", () => {
+describe("isSolvedByAsker", () => {
   const thread = (acceptedAuthor: string | null) =>
     normalizeConversation(
       rawConversation({
@@ -208,7 +208,7 @@ describe("isSolvedByAsker (FR-9)", () => {
   });
 });
 
-describe("stripDescriptionMetadata (D31)", () => {
+describe("stripDescriptionMetadata", () => {
   const topic = "Error with qml.QNode decorator on custom device";
 
   it("removes the inline status, priority and challenge line and the heading it leaves empty", () => {
@@ -297,7 +297,7 @@ describe("stripDescriptionMetadata (D31)", () => {
     expect(stripDescriptionMetadata("Plain question about gradients.", topic)).toBe("Plain question about gradients.");
   });
 
-  it("leaves an internal ID that the asker typed in a sentence (D36)", () => {
+  it("leaves an internal ID that the asker typed in a sentence", () => {
     const sentence = 'Working on CHAL_004 "States and Probabilities" and my probabilities are off.';
 
     expect(stripDescriptionMetadata(sentence, topic)).toBe(sentence);
@@ -305,7 +305,7 @@ describe("stripDescriptionMetadata (D31)", () => {
 });
 
 describe("normalizeChallenge", () => {
-  it("converts points stored as a string to a number (FR-15)", () => {
+  it("converts points stored as a string to a number", () => {
     expect(normalizeChallenge(rawChallenge({ points: "225" })).points).toBe(225);
     expect(normalizeChallenge(rawChallenge({ points: 50 })).points).toBe(50);
   });
@@ -314,7 +314,7 @@ describe("normalizeChallenge", () => {
     expect(() => normalizeChallenge(rawChallenge({ points: "lots" }))).toThrow(/points/);
   });
 
-  it("keeps the status, so drafts and archived challenges can be hidden and labelled (FR-15, FR-22)", () => {
+  it("keeps the status, so drafts and archived challenges can be hidden and labelled", () => {
     expect(normalizeChallenge(rawChallenge({ status: "draft" })).status).toBe("draft");
     expect(normalizeChallenge(rawChallenge({ status: "archived" })).status).toBe("archived");
   });
@@ -356,14 +356,14 @@ describe("the brief's data", () => {
     expect(withTies).toBe(8);
   });
 
-  it("always opens with post_id 1, whose timestamp is created_at, in all 800 conversations (D35)", () => {
+  it("always opens with post_id 1, whose timestamp is created_at, in all 800 conversations", () => {
     expect(count(conversations, (conversation) => conversation.posts[0]?.postId === 1)).toBe(800);
     expect(count(conversations, (conversation) => conversation.posts[0]?.postedAt === conversation.createdAt)).toBe(
       800,
     );
   });
 
-  it("has a reply dated before the question in 220 conversations (D35)", () => {
+  it("has a reply dated before the question in 220 conversations", () => {
     const early = count(conversations, (conversation) =>
       conversation.posts.some((post) => time(post.postedAt) < time(conversation.createdAt)),
     );
@@ -413,19 +413,19 @@ describe("the brief's data", () => {
     }
   });
 
-  it("strips status and priority from 333 descriptions: 170 inline and 163 in a triage table (D31)", () => {
+  it("strips status and priority from 333 descriptions: 170 inline and 163 in a triage table", () => {
     expect(count(stripped, ({ before }) => /^\*\*Status:\*\*.*\*\*Priority:\*\*/m.test(before))).toBe(170);
     expect(count(stripped, ({ before }) => /^\| Priority \|/m.test(before))).toBe(163);
     expect(count(stripped, ({ before }) => /\b(status|priority)\b/i.test(before))).toBe(333);
     expect(count(stripped, ({ after }) => /\b(status|priority|category)\b/i.test(after))).toBe(0);
   });
 
-  it("leaves no priority value a learner could search for (D31, FR-2)", () => {
+  it("leaves no priority value a learner could search for", () => {
     expect(count(stripped, ({ before }) => /urgent/i.test(before))).toBe(22);
     expect(count(conversations, (conversation) => /urgent/i.test(conversation.description))).toBe(0);
   });
 
-  it("strips the internal ID from 521 descriptions, leaving only the 9 where the asker typed it (D31, D36)", () => {
+  it("strips the internal ID from 521 descriptions, leaving only the 9 where the asker typed it", () => {
     expect(count(stripped, ({ before }) => /CHAL_\d+|CONV_\d+/.test(before))).toBe(521);
     expect(count(stripped, ({ after }) => /CHAL_\d+|CONV_\d+/.test(after))).toBe(9);
     expect(
@@ -433,7 +433,7 @@ describe("the brief's data", () => {
     ).toBe(10);
   });
 
-  it("leaves no empty heading, empty code fence, line equal to the topic or empty description (D31)", () => {
+  it("leaves no empty heading, empty code fence, line equal to the topic or empty description", () => {
     for (const { topic, after } of stripped) {
       const lines = after.split("\n");
       const content = lines.filter((line) => line.trim() !== "");
@@ -465,7 +465,7 @@ describe("the brief's data", () => {
     expect(answeredWithout).toBe(105);
   });
 
-  it("never has the opening post as the accepted answer; 20 are solved by the asker (D35, FR-9)", () => {
+  it("never has the opening post as the accepted answer; 20 are solved by the asker", () => {
     expect(count(conversations, (conversation) => conversation.acceptedPostId !== null)).toBe(357);
     expect(count(conversations, (conversation) => conversation.acceptedPostId === conversation.posts[0]?.postId)).toBe(
       0,
@@ -473,7 +473,7 @@ describe("the brief's data", () => {
     expect(count(conversations, isSolvedByAsker)).toBe(20);
   });
 
-  it("matches the tab counts: 128 open, 294 resolved, 169 of them with an accepted answer (D23)", () => {
+  it("matches the tab counts: 128 open, 294 resolved, 169 of them with an accepted answer", () => {
     expect(count(conversations, (conversation) => conversation.status === "open")).toBe(128);
     expect(count(conversations, (conversation) => conversation.status === "resolved")).toBe(294);
     expect(

@@ -17,11 +17,11 @@ export const ACTIONS = [
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
-export interface PermissionContext {
+export type PermissionContext = {
   /** The viewer started the thread. Unknown counts as not their own. */
   isOwnThread?: boolean;
   isLocked?: boolean;
-}
+};
 
 type Rule = "always" | "never" | "ownThread" | "unlessLocked";
 
@@ -61,7 +61,7 @@ const RULES: Record<ViewerRole, Record<Action, Rule>> = {
 };
 
 /** The only place permissions are decided: the UI calls it to hide controls, the mock server to refuse requests. */
-export function can(role: ViewerRole, action: Action, context: PermissionContext = {}): boolean {
+export const can = (role: ViewerRole, action: Action, context: PermissionContext = {}): boolean => {
   switch (RULES[role][action]) {
     case "always":
       return true;
@@ -72,4 +72,4 @@ export function can(role: ViewerRole, action: Action, context: PermissionContext
     case "unlessLocked":
       return context.isLocked !== true;
   }
-}
+};

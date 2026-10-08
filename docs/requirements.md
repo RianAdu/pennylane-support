@@ -2,7 +2,7 @@
 
 Florian · started Oct 6, 2026 · last updated Oct 8, 2026
 
-> Source of truth for *what* to build. Agent rules live in `AGENTS.md`; the decision history lives in `DECISIONS.md`. Requirement IDs (FR-n, NFR-n) are referenced from commits and test names.
+> Source of truth for *what* to build. Agent rules live in `AGENTS.md`; the decision history lives in `DECISIONS.md`. Requirement IDs (FR-n, NFR-n) are referenced from commits.
 
 A learner-first support platform for PennyLane coding challenges, built as a proof of concept for Xanadu's take-home technical assessment, due Oct 9, 2026 at 5:00 PM Eastern (Toronto time).
 

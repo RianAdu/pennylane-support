@@ -25,6 +25,15 @@ PennyLane Support: a learner-first support platform for PennyLane coding challen
 
 Do not add a dependency that is not listed here without asking first, and record any approved addition in `DECISIONS.md`.
 
+## Code style
+
+ESLint enforces the first three rules and the test-name rules; `npm run lint` fails on a violation.
+
+1. **Function expressions** (`const fn = () => …`) for every function, components included. A declaration is allowed only where the language needs one (generators, overloads), each with a lint-disable comment that says why. Define helpers above the code that uses them.
+2. **`type`, not `interface`,** unless a type can't do it. The one expected exception is MUI theme module augmentation (declaration merging), with a disable comment that says why.
+3. **Tests live in a `__tests__` folder** next to the code they test: `src/domain/__tests__/normalize.test.ts`.
+4. **Test necessary behaviour only:** one test per distinct way the code can break. No test that repeats another test's assertion or checks a value that is only passed through.
+
 ## Commands
 
 | Command | Purpose |
@@ -44,6 +53,7 @@ data/                      raw JSON from the brief, read-only
 src/
   app/                     providers, router, theme, layout (top bar, sidebar, drawer)
   domain/                  types, normalize.ts, permissions.ts (pure, no React)
+    __tests__/             tests sit beside the code they test, in every folder
   mocks/
     db/                    load + normalize the JSON once into an in-memory store
     queries/               pure functions: filter, sort, paginate, aggregate
@@ -57,7 +67,7 @@ src/
     insights/              tiles and charts
     roles/                 RoleProvider, useRole, role switcher
   components/              shared UI (StatusChip, Avatar, EmptyState…)
-  test/                    setup, render helpers, fixtures
+  test/                    setup, render helpers, fixtures (no tests)
 e2e/                       Playwright specs
 docs/                      requirements.md (what to build), wireframes/*.png
 ```
@@ -97,7 +107,7 @@ All list responses: `{ items, page, pageSize, total }`. `pageSize` max 50, defau
 
 ## Data normalization rules
 
-Normalization runs once when the store loads. Every rule has a unit test in `domain/normalize.test.ts`.
+Normalization runs once when the store loads. Every rule has a unit test in `domain/__tests__/normalize.test.ts`.
 
 - The opening post is `post_id` 1, never the earliest timestamp: in 220 conversations a reply is dated before the question, while `created_at` and the description follow `post_id` 1 in every conversation (D35). Keep `created_at` as given.
 - Sort the replies by timestamp (449 of 800 conversations are out of order); break ties by `post_id` (8 conversations).
@@ -143,7 +153,8 @@ Normalization runs once when the store loads. Every rule has a unit test in `dom
 - Unit tests: `domain/` (normalize, permissions) and `mocks/queries/` (filter, sort, paginate, insights).
 - Component tests: render through the real MSW handlers (via `setupServer`), not mocked hooks. Cover list filtering and tabs, replying, role gating and a 403 shown to the user.
 - One Playwright run: filter the list, open a thread, reply. Run an axe check on each main page.
-- Name tests after behaviour and reference the requirement: `it('hides priority from learners (FR-4)')`.
+- Name tests after behaviour in plain words: `it('hides priority from learners')`. Requirement IDs stay in commit messages, not in test names or describe blocks.
+- No printf placeholders (`%s`) in test names. For `it.each` use objects with `$name`, or write separate tests when there are only two or three cases.
 - Never weaken or delete a test to make it pass. A failing test means fix the code or ask.
 
 ## Working agreement for agents

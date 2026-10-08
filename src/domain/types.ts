@@ -1,7 +1,7 @@
 // Raw shapes: the JSON files exactly as the brief ships them. Enum-like fields are plain strings here and are
 // checked when normalize.ts narrows them.
 
-export interface RawPost {
+export type RawPost = {
   post_id: number;
   user: string;
   timestamp: string;
@@ -9,9 +9,9 @@ export interface RawPost {
   user_role: string;
   reactions: { upvotes: number; helpful: number };
   is_accepted_answer: boolean;
-}
+};
 
-export interface RawConversation {
+export type RawConversation = {
   identifier: string;
   topic: string;
   category: string;
@@ -31,9 +31,9 @@ export interface RawConversation {
   assigned_to: string | null;
   resolution_time_hours: number | null;
   description?: string;
-}
+};
 
-export interface RawChallenge {
+export type RawChallenge = {
   challenge_id: string;
   title: string;
   description: string;
@@ -52,7 +52,7 @@ export interface RawChallenge {
   updated_at: string;
   author: string;
   prerequisite_challenge_ids: string[];
-}
+};
 
 // Domain shapes: what the mock store holds and the API returns.
 
@@ -74,7 +74,7 @@ export type ChallengeStatus = (typeof CHALLENGE_STATUSES)[number];
 export const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced", "Expert"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
-export interface Post {
+export type Post = {
   /** Unique only inside its conversation; identify a post by conversation id and postId together. */
   postId: number;
   author: string;
@@ -84,9 +84,9 @@ export interface Post {
   content: string;
   upvotes: number;
   helpful: number;
-}
+};
 
-export interface Conversation {
+export type Conversation = {
   id: string;
   title: string;
   category: string;
@@ -105,9 +105,9 @@ export interface Conversation {
   /** The opening post first, then the replies in time order. */
   posts: Post[];
   acceptedPostId: number | null;
-}
+};
 
-export interface Challenge {
+export type Challenge = {
   id: string;
   title: string;
   description: string;
@@ -122,4 +122,4 @@ export interface Challenge {
   completionRate: number;
   attemptCount: number;
   averageAttemptsToPass: number;
-}
+};

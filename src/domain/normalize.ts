@@ -12,20 +12,20 @@ import {
   type RawPost,
 } from "./types";
 
-function oneOf<T extends string>(allowed: readonly T[], value: string, field: string): T {
+const oneOf = <T extends string>(allowed: readonly T[], value: string, field: string): T => {
   const match = allowed.find((candidate) => candidate === value);
   if (match === undefined) {
     throw new Error(`Unexpected ${field}: "${value}"`);
   }
   return match;
-}
+};
 
 /**
  * The opening post is the one with the lowest `post_id` (always 1 in the data); the replies follow by timestamp,
  * ties broken by `post_id`. Timestamps alone cannot pick the opening post: in 220 conversations a reply is dated
  * before the question (D35).
  */
-export function orderPosts(posts: readonly RawPost[]): RawPost[] {
+export const orderPosts = (posts: readonly RawPost[]): RawPost[] => {
   const byPostId = [...posts].sort((a, b) => a.post_id - b.post_id);
   const [opening, ...replies] = byPostId;
   if (opening === undefined) {
@@ -33,7 +33,7 @@ export function orderPosts(posts: readonly RawPost[]): RawPost[] {
   }
   replies.sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp) || a.post_id - b.post_id);
   return [opening, ...replies];
-}
+};
 
 // Lines that restate a field of the record: status, priority, category, topic, tags or an internal ID (D31).
 const METADATA_LINES: readonly RegExp[] = [
@@ -53,12 +53,12 @@ const isBlank = (line: string) => line.trim() === "";
 const isFence = (line: string) => /^\s*(```|~~~)/.test(line);
 const isHeading = (line: string) => /^#{1,6}\s/.test(line);
 
-function isMetadataLine(line: string, topic: string): boolean {
+const isMetadataLine = (line: string, topic: string): boolean => {
   const trimmed = line.trim();
   return trimmed === topic || METADATA_LINES.some((pattern) => pattern.test(trimmed));
-}
+};
 
-function dropEmptyFences(lines: readonly string[]): string[] {
+const dropEmptyFences = (lines: readonly string[]): string[] => {
   const kept: string[] = [];
   let index = 0;
   while (index < lines.length) {
@@ -76,10 +76,10 @@ function dropEmptyFences(lines: readonly string[]): string[] {
     index = close + 1;
   }
   return kept;
-}
+};
 
 /** Drops a heading with nothing under it before the next heading or the end. `#` inside a code fence is code. */
-function dropEmptyHeadings(lines: readonly string[]): string[] {
+const dropEmptyHeadings = (lines: readonly string[]): string[] => {
   let insideFence = false;
   const isCode = lines.map((line) => {
     if (isFence(line)) {
@@ -106,21 +106,21 @@ function dropEmptyHeadings(lines: readonly string[]): string[] {
     kept.push(line);
   }
   return kept.reverse();
-}
+};
 
 /**
  * Removes the lines of a description that restate record fields, then the empty heading or code fence they leave
  * behind. Priority is admin only and search reads the description, so none of it may survive (D31).
  */
-export function stripDescriptionMetadata(description: string, topic: string): string {
+export const stripDescriptionMetadata = (description: string, topic: string): string => {
   const withoutMetadata = description.split("\n").filter((line) => !isMetadataLine(line, topic));
   return dropEmptyHeadings(dropEmptyFences(withoutMetadata))
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-}
+};
 
-function normalizePost(raw: RawPost): Post {
+const normalizePost = (raw: RawPost): Post => {
   return {
     postId: raw.post_id,
     author: raw.user,
@@ -130,9 +130,9 @@ function normalizePost(raw: RawPost): Post {
     upvotes: raw.reactions.upvotes,
     helpful: raw.reactions.helpful,
   };
-}
+};
 
-export function normalizeConversation(raw: RawConversation): Conversation {
+export const normalizeConversation = (raw: RawConversation): Conversation => {
   const ordered = orderPosts(raw.posts);
   const opening = ordered[0];
   if (opening === undefined) {
@@ -163,16 +163,16 @@ export function normalizeConversation(raw: RawConversation): Conversation {
     posts: ordered.map(normalizePost),
     acceptedPostId: accepted?.post_id ?? null,
   };
-}
+};
 
 /** True when the accepted answer was written by the person who asked. The opening post is never the answer. */
-export function isSolvedByAsker(conversation: Pick<Conversation, "posts" | "acceptedPostId">): boolean {
+export const isSolvedByAsker = (conversation: Pick<Conversation, "posts" | "acceptedPostId">): boolean => {
   const asker = conversation.posts[0]?.author;
   const accepted = conversation.posts.find((post) => post.postId === conversation.acceptedPostId);
   return accepted !== undefined && accepted.author === asker;
-}
+};
 
-export function normalizeChallenge(raw: RawChallenge): Challenge {
+export const normalizeChallenge = (raw: RawChallenge): Challenge => {
   const points = Number(raw.points);
   if (!Number.isFinite(points)) {
     throw new Error(`Challenge ${raw.challenge_id} has unreadable points: "${raw.points}"`);
@@ -194,4 +194,4 @@ export function normalizeChallenge(raw: RawChallenge): Challenge {
     attemptCount: raw.attempt_count,
     averageAttemptsToPass: raw.average_attempts_to_pass,
   };
-}
+};
