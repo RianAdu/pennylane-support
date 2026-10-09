@@ -1,5 +1,6 @@
 import { delay, http, type HttpHandler } from "msw";
 import type { Store } from "../db/store";
+import { challengeHandlers } from "./challenges";
 import { conversationHandlers } from "./conversations";
 import { metaHandlers } from "./meta";
 
@@ -18,5 +19,5 @@ export const createHandlers = (store: Store, { delayMs }: HandlerOptions = {}): 
         }),
       ]
     : [];
-  return [...latency, ...conversationHandlers(store), ...metaHandlers(store)];
+  return [...latency, ...conversationHandlers(store), ...challengeHandlers(store), ...metaHandlers(store)];
 };

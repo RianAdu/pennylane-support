@@ -1,7 +1,13 @@
 import { expect, it } from "vitest";
-import { ROLE_HEADER, type ConversationSummary, type Meta, type Paged } from "../../../api/contract";
+import {
+  ROLE_HEADER,
+  type ChallengeDetail,
+  type ConversationSummary,
+  type Meta,
+  type Paged,
+} from "../../../api/contract";
 import { apiGet } from "../../../api/http";
-import { rawConversation } from "../../../test-utils/fixtures";
+import { rawChallenge, rawConversation } from "../../../test-utils/fixtures";
 import { serve } from "../../../test-utils/serve";
 
 const conversations = [
@@ -72,4 +78,21 @@ it("treats a request without a known role as a learner", async () => {
 
   expect(await withoutRole.json()).not.toHaveProperty("assignees");
   expect(await withUnknownRole.json()).not.toHaveProperty("assignees");
+});
+
+it("gives a learner a draft challenge, since its threads are visible", async () => {
+  serve(conversations, [rawChallenge({ challenge_id: "CHAL_DRAFT", title: "Unreleased", status: "draft" })]);
+
+  const challenge = await apiGet<ChallengeDetail>("/api/challenges/CHAL_DRAFT", "learner");
+
+  expect(challenge).toMatchObject({ title: "Unreleased", status: "draft" });
+});
+
+it("answers 404 for a challenge that does not exist", async () => {
+  serve(conversations);
+
+  await expect(apiGet("/api/challenges/CHAL_MISSING", "learner")).rejects.toMatchObject({
+    name: "ApiError",
+    status: 404,
+  });
 });

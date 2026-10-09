@@ -8,10 +8,13 @@ import { useState } from "react";
 import { Outlet, useMatch } from "react-router";
 import { RoleSwitcher } from "../components/RoleSwitcher";
 import { SidebarNav } from "./SidebarNav/SidebarNav";
-import { SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./sharedSizes";
+import { SHEET_SHADOW } from "../theme/theme";
+import { CONTENT_WIDTH, SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./shared/sharedSizes";
+import { MAIN_ID } from "./hooks/useReturnToMainTop";
 import { TopBar } from "./TopBar";
 
-const MAIN_ID = "main";
+/** The room between the sheet's edge and its text, from 900 px. */
+const SHEET_PADDING = 44;
 
 /** The frame around every page: skip link, top bar, navigation and the main landmark. */
 export const AppLayout = () => {
@@ -31,7 +34,7 @@ export const AppLayout = () => {
           zIndex: "tooltip",
           px: 2,
           py: 1,
-          bgcolor: "background.default",
+          bgcolor: "background.paper",
           border: 1,
           borderColor: "inputBorder",
           borderRadius: 1,
@@ -56,8 +59,6 @@ export const AppLayout = () => {
               alignSelf: "flex-start",
               height: `calc(100dvh - ${TOP_BAR_HEIGHT}px)`,
               overflowY: "auto",
-              borderRight: 1,
-              borderColor: "divider",
             }}
           >
             <SidebarNav />
@@ -67,9 +68,45 @@ export const AppLayout = () => {
           component="main"
           id={MAIN_ID}
           tabIndex={-1}
-          sx={{ flex: 1, minWidth: 0, px: { xs: 2, md: 4 }, py: { xs: 3, md: 4 }, outline: "none" }}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            minWidth: 0,
+            px: { md: 4 },
+            pt: { md: 3 },
+            pb: { md: 8 },
+            // Main takes focus from the skip link and from a new page of a list. The ring goes on the sheet, which is
+            // what the viewer sees as the page, and only for keyboard focus.
+            outline: "none",
+            "&:focus-visible > *": {
+              outline: (theme) => `2px solid ${theme.palette.primary.main}`,
+              outlineOffset: { xs: -2, md: 2 },
+            },
+            // The top bar is sticky, so a jump to main (the skip link, a new page of a list) must stop below it.
+            scrollMarginTop: TOP_BAR_HEIGHT,
+          }}
         >
-          <Outlet />
+          {/* The sheet: one reading column on white, centred in the room beside the navigation. On a phone it is
+              the whole screen. */}
+          <Box
+            sx={{
+              flex: { xs: 1, md: "none" },
+              width: "100%",
+              maxWidth: { md: CONTENT_WIDTH + 2 * SHEET_PADDING },
+              mx: "auto",
+              px: { xs: 2, md: `${SHEET_PADDING}px` },
+              pt: { xs: 3, md: 5 },
+              pb: { xs: 5, md: 4 },
+              bgcolor: "background.paper",
+              border: { md: 1 },
+              borderColor: { md: "divider" },
+              borderRadius: { md: 3 },
+              boxShadow: { md: SHEET_SHADOW },
+            }}
+          >
+            <Outlet />
+          </Box>
         </Box>
       </Box>
       <Drawer
@@ -82,7 +119,13 @@ export const AppLayout = () => {
           root: { closeAfterTransition: false },
           paper: {
             "aria-label": "Menu",
-            sx: { width: SIDEBAR_WIDTH, maxWidth: "85vw", display: "flex", flexDirection: "column" },
+            sx: {
+              width: SIDEBAR_WIDTH,
+              maxWidth: "85vw",
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: "background.default",
+            },
           },
         }}
       >

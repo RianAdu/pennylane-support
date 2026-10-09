@@ -1,9 +1,12 @@
+import ExtensionOutlinedIcon from "@mui/icons-material/ExtensionOutlined";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { useLocation, useSearchParams } from "react-router";
 import { can } from "../../domain/permissions";
 import { useRole } from "../../providers/role/useRole";
-import { listReset } from "../sharedStyles";
+import { listReset } from "../shared/sharedStyles";
 import { Categories } from "./Categories";
 import { NavRow } from "./NavRow";
 
@@ -19,23 +22,41 @@ export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
   const activeCategory = onList ? searchParams.get("category") : null;
 
   return (
-    <Box component="nav" aria-label="Main" sx={{ p: 1.5 }}>
+    <Box component="nav" aria-label="Main" sx={{ p: 1.5, pt: { md: 3 } }}>
       <Box component="ul" sx={listReset}>
         <li>
-          <NavRow to="/" current={onList && activeCategory === null} section onNavigate={onNavigate}>
+          <NavRow
+            to="/"
+            current={onList && activeCategory === null}
+            section
+            icon={<ForumOutlinedIcon aria-hidden />}
+            onNavigate={onNavigate}
+          >
             Community
           </NavRow>
           {inCommunity && <Categories activeCategory={activeCategory} onNavigate={onNavigate} />}
         </li>
         <Divider component="li" aria-hidden sx={{ my: 1.5 }} />
         <li>
-          <NavRow to="/challenges" current={pathname === "/challenges"} section onNavigate={onNavigate}>
+          <NavRow
+            to="/challenges"
+            current={pathname === "/challenges"}
+            section
+            icon={<ExtensionOutlinedIcon aria-hidden />}
+            onNavigate={onNavigate}
+          >
             Challenges
           </NavRow>
         </li>
         {can(role, "viewInsights") && (
           <li>
-            <NavRow to="/insights" current={pathname === "/insights"} section onNavigate={onNavigate}>
+            <NavRow
+              to="/insights"
+              current={pathname === "/insights"}
+              section
+              icon={<InsightsOutlinedIcon aria-hidden />}
+              onNavigate={onNavigate}
+            >
               Insights
             </NavRow>
           </li>

@@ -1,4 +1,4 @@
-import type { ConversationStatus, Priority } from "../domain/types";
+import type { Challenge, ConversationStatus, Priority } from "../domain/types";
 
 // The HTTP contract: the shapes that cross `/api`. The mock server implements it as a real backend would, and the
 // app reads it through the hooks in this folder.
@@ -45,6 +45,14 @@ export type Meta = {
   tags: string[];
   /** Admin only: the key is absent from a learner's response. */
   assignees?: string[];
+};
+
+/** One challenge, as `GET /api/challenges/:id` returns it. Draft and archived challenges are returned too. */
+export type ChallengeDetail = Challenge & {
+  /** How many threads about this challenge have the status open. */
+  openQuestionCount: number;
+  /** Another challenge has the same title, so the category is shown beside it. */
+  titleRepeats: boolean;
 };
 
 /** The request header that carries the viewer's role. A real backend would read the session instead. */

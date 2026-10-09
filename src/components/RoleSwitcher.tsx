@@ -12,7 +12,13 @@ const ROLE_LABELS: Record<ViewerRole, string> = {
 };
 
 /** Sets who the viewer is. There is no sign-in: the role is the demo's stand-in for one. */
-export const RoleSwitcher = ({ fullWidth = false }: { fullWidth?: boolean }) => {
+type RoleSwitcherProps = {
+  fullWidth?: boolean;
+  /** It sits on the top bar, so its edge is the bar's, not the page's. */
+  onDark?: boolean;
+};
+
+export const RoleSwitcher = ({ fullWidth = false, onDark = false }: RoleSwitcherProps) => {
   const { role, setRole } = useRole();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const buttonId = useId();
@@ -36,7 +42,15 @@ export const RoleSwitcher = ({ fullWidth = false }: { fullWidth?: boolean }) => 
         aria-controls={open ? menuId : undefined}
         aria-expanded={open ? "true" : undefined}
         onClick={(event) => setAnchor(event.currentTarget)}
-        sx={{ borderColor: "inputBorder", fontWeight: 400, whiteSpace: "nowrap", justifyContent: "space-between" }}
+        sx={{
+          borderColor: onDark ? "topBar.edge" : "inputBorder",
+          borderRadius: 5,
+          fontSize: "0.9375rem",
+          fontWeight: 400,
+          whiteSpace: "nowrap",
+          justifyContent: "space-between",
+          "&:hover": { borderColor: "currentColor" },
+        }}
       >
         Viewing as: {ROLE_LABELS[role]}
       </Button>

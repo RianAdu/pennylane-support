@@ -8,6 +8,10 @@ export const conversationsKey = (role: ViewerRole, query: ConversationListQuery)
   return ["conversations", role, query] as const;
 };
 
+export const challengeKey = (role: ViewerRole, id: string | undefined) => {
+  return ["challenge", role, id] as const;
+};
+
 export const metaKey = (role: ViewerRole) => {
   return ["meta", role] as const;
 };

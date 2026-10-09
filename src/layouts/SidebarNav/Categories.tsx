@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 import { useMeta } from "../../api/hooks/useMeta";
-import { listReset, visuallyHidden } from "../sharedStyles";
+import { listReset, visuallyHidden } from "../shared/sharedStyles";
 import { NavRow } from "./NavRow";
 
 const LOADING_ROWS = 6;

@@ -2,13 +2,12 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import MuiLink from "@mui/material/Link";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import type { Theme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { Link } from "react-router";
+import { BrandMark } from "../components/BrandMark";
 import { RoleSwitcher } from "../components/RoleSwitcher";
-import { visuallyHidden } from "./sharedStyles";
-import { SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./sharedSizes";
+import { SearchField } from "./SearchField";
+import { visuallyHidden } from "./shared/sharedStyles";
+import { SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./shared/sharedSizes";
 
 type TopBarProps = {
   /** The sidebar is not on screen at any width (the thread page), so the menu button always shows. */
@@ -17,9 +16,6 @@ type TopBarProps = {
 };
 
 export const TopBar = ({ menuAtEveryWidth, onOpenMenu }: TopBarProps) => {
-  // On a phone the field is too narrow for the full hint. The accessible name stays "Search questions" at every width.
-  const roomForFullHint = useMediaQuery((theme: Theme) => theme.breakpoints.up("sm"));
-
   return (
     <Box
       component="header"
@@ -32,9 +28,10 @@ export const TopBar = ({ menuAtEveryWidth, onOpenMenu }: TopBarProps) => {
         gap: 1,
         height: TOP_BAR_HEIGHT,
         px: { xs: 1, md: 3 },
-        bgcolor: "background.default",
-        borderBottom: 1,
-        borderColor: "divider",
+        bgcolor: "topBar.main",
+        color: "common.white",
+        // Action blue does not show on ink, so the ring is the bar's light accent here.
+        "& :focus-visible, & .Mui-focusVisible": { outlineColor: (theme) => theme.palette.topBar.accent },
       }}
     >
       <IconButton
@@ -45,40 +42,38 @@ export const TopBar = ({ menuAtEveryWidth, onOpenMenu }: TopBarProps) => {
       >
         <MenuIcon aria-hidden />
       </IconButton>
-      {/* At the sidebar's width, so the search field lines up with the page content below it. */}
+      {/* At the sidebar's width, so the search field starts where the main area starts. */}
       <Box sx={{ flexShrink: 0, width: menuAtEveryWidth ? "auto" : { md: SIDEBAR_WIDTH - 24 }, pr: { md: 2 } }}>
         <MuiLink
           component={Link}
           to="/"
-          color="text.primary"
+          color="inherit"
           underline="none"
-          sx={{ fontSize: "1.125rem", fontWeight: 700, whiteSpace: "nowrap" }}
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 1.25,
+            fontSize: "1.125rem",
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            whiteSpace: "nowrap",
+            borderRadius: 0.5,
+          }}
         >
-          PennyLane
-          {/* Below 375 px the second word gives its room to the search field. A screen reader still gets it. */}
-          <Box component="span" sx={{ "@media (max-width: 374.95px)": visuallyHidden }}>
-            {" "}
-            Support
-          </Box>
+          <BrandMark size={22} onDark />
+          <span>
+            PennyLane
+            {/* On a phone the second word gives its room to the search field. A screen reader still gets it. */}
+            <Box component="span" sx={(theme) => ({ [theme.breakpoints.down("sm")]: visuallyHidden })}>
+              {" "}
+              Support
+            </Box>
+          </span>
         </MuiLink>
       </Box>
-      {/* Not wired yet: the field shows where search lives, and submitting it does nothing. */}
-      <Box
-        component="form"
-        role="search"
-        onSubmit={(event) => event.preventDefault()}
-        sx={{ flex: 1, minWidth: 0, maxWidth: 480 }}
-      >
-        <OutlinedInput
-          type="search"
-          size="small"
-          fullWidth
-          placeholder={roomForFullHint ? "Search questions" : "Search"}
-          slotProps={{ input: { "aria-label": "Search questions" } }}
-        />
-      </Box>
+      <SearchField />
       <Box sx={{ display: { xs: "none", md: "block" }, ml: "auto", pl: 2 }}>
-        <RoleSwitcher />
+        <RoleSwitcher onDark />
       </Box>
     </Box>
   );

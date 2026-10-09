@@ -81,12 +81,12 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 
 ### Community: conversation list (home)
 
-- **FR-1** Paginated list, 20 per page, ordered by latest activity. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. The excerpt is the opening post's content, cut at a word boundary at 200 characters with an ellipsis; Markdown stripping and a description fallback wait until new questions can be posted (D24). Resolved threads with an accepted answer show a check in the status. No internal IDs on screen.
+- **FR-1** Paginated list, 20 per page, ordered by latest activity. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. The excerpt is the opening post's content, cut at a word boundary at 200 characters with an ellipsis; Markdown stripping and a description fallback wait until new questions can be posted (D24). Resolved threads with an accepted answer show a check in the status. An admin's rows also show priority and assignee, which say why a thread needs attention. The whole row is one link. No internal IDs on screen.
 - **FR-2** Search in the top bar across topic and description, done by the server and debounced in the UI. It always searches questions: from any other page it opens the Community list with the query.
 - **FR-3** Left sidebar: Community with its 13 categories and thread counts, then Challenges, plus Insights for the admin. Counts are totals per category from `/api/meta` and do not change with the search or filters. Picking a category filters the list and renames the header. Challenge categories join the sidebar with the Challenges page (slice 8); until then Challenges is a plain link.
-- **FR-4** Intent tabs: Latest (default), Unanswered (status open), Solved (status resolved). A challenge filter in the URL shows as a removable chip with the challenge name; it is reached from a challenge card. (cut) "More filters" with tag and a challenge picker and, for the admin, priority and assignee.
+- **FR-4** Intent tabs: Latest (default), Unanswered (status open), Solved (status resolved). A challenge filter in the URL shows as a removable chip with the challenge name; it is reached from a challenge card, and its name comes from `GET /api/challenges/:id`. (cut) "More filters" with tag and a challenge picker and, for the admin, priority and assignee.
 - **FR-5** Search, category, tab, the challenge filter and page live in the URL. Switching to Learner removes the admin-only Needs attention tab and falls back to Latest.
-- **FR-6** Loading (skeleton), empty (with "Clear filters") and error (with "Try again") states. "Clear filters" clears the search and every filter but keeps the tab. The result count is announced to screen readers.
+- **FR-6** Loading (skeleton), empty (with "Clear filters") and error (with "Try again") states. "Clear filters" clears the search and every filter but keeps the tab. One line above the rows gives the result count ("800 questions", "12 results for “vqe”"); the same element is the live region, so what is shown is what is announced.
 - **FR-7** Admin only: a "Needs attention" tab showing open threads that are unassigned or high or urgent priority. The server answers a learner's request for it with 403.
 
 ### Conversation detail
@@ -126,12 +126,13 @@ Low-fidelity wireframes of the four screens, using real rows from the data. They
 
 - **Reference, not copy:** the data mirrors the PennyLane forum and the challenges page. We borrow their content model and connect the two, which today live on separate sites. Layout patterns draw on the PennyLane forum and various online forums: list rows with votes and excerpts, and question-and-answer threads.
 - **One bold idea:** answer-first threads. Q: and A: markers, the accepted answer directly under the question, and solved threads marked in the list.
-- **Quiet everywhere else:** lists are rows separated by rules, not stacks of cards; challenges are the one place cards fit, because they are content. One reading column of at most 72 characters. Everything left-aligned.
+- **Quiet everywhere else:** lists are rows separated by rules, not stacks of cards; challenges are the one place cards fit, because they are content. One reading column of at most 72 characters (760 px), centred in the main area; inside it everything is left-aligned.
+- **Signature:** the subject's own notation. The brand mark is a question in a ket, and a small circuit diagram sits beside each page header. Nothing else is decorated.
 - **Light theme**, chosen for reading long threads. A dark theme is a stretch goal; MUI makes it cheap.
 - **Votes and helpful counts are display only.** Voting would be a new data change and is listed under What's next.
 - **Production quality (D54):** the wireframes say what is on a screen, not how it looks. The shared visual pieces (status chip, avatar, list row, page header, empty and error states) are built once as a design system with theme-level styles and reused on every screen. The colour tokens and fonts below may be refined when the contrast is checked again.
 - **Type:** Atkinson Hyperlegible for all UI and body text, chosen for legibility, which fits the accessibility story. JetBrains Mono only inside code blocks.
-- **Color (MUI theme):** ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7; muted text #566074, input border #737D8F, chip tints solved #EDF3F3 and waiting #F5F1EE, all checked against WCAG AA (D50). Status: Open uses waiting, Answered neutral grey, Resolved solved (with ✓ when there is an accepted answer), Closed a grey outline. Action blue is for links and buttons only, never for status. Status always pairs color with a word.
+- **Color (MUI theme):** three layers: an ink top bar, a canvas #F4F5F9 and the page on a white sheet. Ink #1E2533, paper #FFFFFF, action #3D45C4, solved #157A55, waiting #9A5B00, rules #DDE1E7; muted text #566074, input border #737D8F, chip tints solved #EDF3F3 and waiting #F5F1EE, all checked against WCAG AA (D50, D56). Status: Open uses waiting, Answered neutral grey, Resolved solved (with ✓ when there is an accepted answer), Closed a grey outline. Action blue is for links and buttons only, never for status. Status always pairs color with a word.
 - **Copy:** plain words from the learner's side ("Ask a question", "Try again"), sentence case, no internal IDs on screen.
 
 ### Community list
@@ -228,7 +229,7 @@ All endpoints live under `/api` and are served by MSW handlers. Each handler is 
 | `POST /api/conversations/:id/posts` | Reply | 409 if locked; 400 if empty |
 | `PATCH /api/conversations/:id` | Status, assignee, priority, pinned, locked, accepted post | 403 if the role may not change that field |
 | `GET /api/challenges` | Paged, filtered challenges | `q`, `difficulty`, `category`, `includeHidden`³, `page`, `pageSize` |
-| `GET /api/challenges/:id` | One challenge with its open-question count | 404 if unknown |
+| `GET /api/challenges/:id` | One challenge with its open-question count | 404 if unknown; draft and archived challenges are returned to every role, since their threads are visible |
 | `GET /api/insights` | Aggregated metrics for the admin page | 403 unless admin |
 | `GET /api/meta` | Options for menus: the 13 community categories with thread counts, tags, assignees | None |
 
@@ -270,7 +271,7 @@ With the foundation in place, the remaining work was prioritized (D53) into thre
 
 ### M2 · Screens
 
-- [ ] Slice 6 · Community list and design system: the shared pieces (status chip, avatar, list row, page header, empty and error states), the lifted shell, then rows, intent tabs with Needs attention, sidebar categories, top-bar search, the challenge chip, paging, states and the live region (FR-1 to FR-7)
+- [x] Slice 6 · Community list and design system: the shared pieces (status chip, avatar, list row, page header, empty and error states), the lifted shell, then rows, intent tabs with Needs attention, sidebar categories, top-bar search, the challenge chip, paging, states and the live region (FR-1 to FR-7)
 - [ ] Slice 7 · Thread page: header, answer-first posts, "About this challenge" rail, reply form, the admin's status change with its server-side 403 (FR-8 to FR-11, FR-13, FR-22)
 - [ ] Slice 8 · Insights and Challenges: `/api/insights` with a unit test against hand-checked numbers, four tiles and two charts with text summaries, the "not permitted" state; challenge cards by category, each opening its filtered list (FR-15, FR-18 to FR-21). For the hand check: in 20 resolved or closed conversations `resolution_time_hours` is shorter than the span of the posts. Use the field as given; no rule
 
@@ -315,8 +316,6 @@ The list filters of item 1 already work in the mock server, and `can()` already 
 | First requests fire before the mock worker is ready | Await `worker.start()` before rendering, as the MSW docs require |
 | Claude Code generates more than the slice needs | Plan mode for every slice; review each diff; one slice per commit |
 | MUI X Charts API is new | Check its docs first; fall back to MUI bars built from `LinearProgress` |
-| The build runs long | Apply the cut list early and in order, not at the last minute |
-| A late surprise | Submit with a buffer before the deadline |
 
 **Sources**
 
