@@ -1,4 +1,4 @@
-import type { Challenge, ChallengeStatus, ConversationStatus, Post, Priority } from "../domain/types";
+import type { Challenge, ChallengeStatus, ConversationStatus, Difficulty, Post, Priority } from "../domain/types";
 
 // The HTTP contract: the shapes that cross `/api`. The mock server implements it as a real backend would, and the
 // app reads it through the hooks in this folder.
@@ -85,6 +85,27 @@ export type ChallengeDetail = Challenge & {
   openQuestionCount: number;
   /** Another challenge has the same title, so the category is shown beside it. */
   titleRepeats: boolean;
+};
+
+/** One card on the Challenges page. */
+export type ChallengeCard = {
+  id: string;
+  title: string;
+  /** Another challenge has the same title, so the category is shown beside it. */
+  titleRepeats: boolean;
+  difficulty: Difficulty;
+  /** The description's first sentence-like line: descriptions are Markdown, and a card has room for one line. */
+  summary: string;
+  /** How many threads about this challenge have the status open. */
+  openQuestionCount: number;
+};
+
+/**
+ * What `GET /api/challenges` returns: every published challenge, grouped by category, both in the order of the
+ * data. Not paged: the page shows each category as one row, and a page would cut a row in two.
+ */
+export type ChallengeGroups = {
+  categories: { name: string; challenges: ChallengeCard[] }[];
 };
 
 /** One month of new conversations. */

@@ -35,6 +35,8 @@ const TOP_BAR = {
 };
 /** The sheet's lift off the canvas: two soft layers of ink, no hard edge. */
 export const SHEET_SHADOW = `0 1px 2px ${alpha(INK, 0.04)}, 0 12px 32px ${alpha(INK, 0.05)}`;
+/** A challenge card's lift off its shelf: closer and tighter than the sheet's, so the card floats just above it. */
+export const CARD_SHADOW = `0 1px 2px ${alpha(INK, 0.06)}, 0 4px 10px ${alpha(INK, 0.08)}`;
 /** Chip backgrounds: the status colour at 6% on paper. At 10% the solved text falls below 4.5:1. */
 const SOLVED_TINT = "#EDF3F3";
 const WAITING_TINT = "#F5F1EE";

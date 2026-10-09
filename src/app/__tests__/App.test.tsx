@@ -41,3 +41,16 @@ it("shows an admin the Insights link", async () => {
   expect(within(menu).getByRole("link", { name: "Insights" })).toBeInTheDocument();
   await expectNoAxeViolations(document.body);
 });
+
+it("lists the challenge categories under Challenges, each a link to its row on the page", async () => {
+  serve([rawConversation()]);
+  renderApp("/challenges");
+  await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+  const menu = screen.getByRole("dialog", { name: "Menu" });
+
+  expect(await within(menu).findByRole("link", { name: "Getting Started" })).toHaveAttribute(
+    "href",
+    "/challenges#getting-started",
+  );
+  await expectNoAxeViolations(document.body);
+});

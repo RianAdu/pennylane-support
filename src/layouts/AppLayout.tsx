@@ -9,12 +9,16 @@ import { Outlet, ScrollRestoration, useMatch } from "react-router";
 import { RoleSwitcher } from "../components/RoleSwitcher";
 import { SidebarNav } from "./SidebarNav/SidebarNav";
 import { SHEET_SHADOW } from "../theme/theme";
-import { CONTENT_WIDTH, RAIL_GAP, RAIL_WIDTH, SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./shared/sharedSizes";
+import {
+  CONTENT_WIDTH,
+  RAIL_GAP,
+  RAIL_WIDTH,
+  SHEET_PADDING,
+  SIDEBAR_WIDTH,
+  TOP_BAR_HEIGHT,
+} from "./shared/sharedSizes";
 import { MAIN_ID } from "./hooks/useReturnToMainTop";
 import { TopBar } from "./TopBar";
-
-/** The room between the sheet's edge and its text, from 900 px. */
-const SHEET_PADDING = 44;
 
 /** The frame around every page: skip link, top bar, navigation and the main landmark. */
 export const AppLayout = () => {

@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import {
   ROLE_HEADER,
   type ChallengeDetail,
+  type ChallengeGroups,
   type ConversationDetail,
   type ConversationSummary,
   type Meta,
@@ -87,6 +88,20 @@ it("gives a learner a draft challenge, since its threads are visible", async () 
   const challenge = await apiGet<ChallengeDetail>("/api/challenges/CHAL_DRAFT", "learner");
 
   expect(challenge).toMatchObject({ title: "Unreleased", status: "draft" });
+});
+
+it("gives draft challenges in the list to an admin who asks, and ignores a learner who asks", async () => {
+  serve(conversations, [
+    rawChallenge({ challenge_id: "CHAL_001", title: "Begin Here" }),
+    rawChallenge({ challenge_id: "CHAL_DRAFT", title: "Unreleased", status: "draft" }),
+  ]);
+  const titles = async (role: "learner" | "admin") => {
+    const { categories } = await apiGet<ChallengeGroups>("/api/challenges", role, { includeHidden: "true" });
+    return categories.flatMap(({ challenges }) => challenges.map((challenge) => challenge.title));
+  };
+
+  expect(await titles("admin")).toEqual(["Begin Here", "Unreleased"]);
+  expect(await titles("learner")).toEqual(["Begin Here"]);
 });
 
 it("answers 404 for a challenge that does not exist", async () => {

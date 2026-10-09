@@ -8,6 +8,7 @@ import { can } from "../../domain/permissions";
 import { useRole } from "../../providers/role/useRole";
 import { listReset } from "../shared/sharedStyles";
 import { Categories } from "./Categories";
+import { ChallengeCategories } from "./ChallengeCategories";
 import { NavRow } from "./NavRow";
 
 /** The app's navigation. The sidebar and the drawer both render it, so the two can never list different things. */
@@ -47,6 +48,7 @@ export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
           >
             Challenges
           </NavRow>
+          {pathname === "/challenges" && <ChallengeCategories onNavigate={onNavigate} />}
         </li>
         {can(role, "viewInsights") && (
           <li>
