@@ -120,7 +120,7 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 
 Low-fidelity wireframes of the four screens, using real rows from the data. They fix layout, hierarchy and content, not pixels: spacing, exact sizes and the final colors come from the MUI theme. Where a wireframe and the text disagree, the text wins. Every screen is designed from one user job: a learner asking "has someone solved this?", and an admin asking "is support keeping up?". Anything that doesn't serve that job is one click away or gone.
 
-**Where the text supersedes the wireframes:** the Open chip is not blue (see Color below); the phone drawer lists all 13 categories, with no "7 more categories" row; the top-bar search always reads "Search questions"; the difficulty tabs include Expert; "Ask a question" appears only once the ask form exists (FR-14); the thread page has one reply form, and its status reads "✓ Resolved"; phone list rows keep the challenge name and last activity.
+**Where the text supersedes the wireframes:** the Open chip is not blue (see Color below); the phone drawer lists all 13 categories, with no "7 more categories" row; the top-bar search always reads "Search questions" (shortened to "Search" as the visible hint below 600 px, where the full text is cut off; its accessible name does not change); the difficulty tabs include Expert; "Ask a question" appears only once the ask form exists (FR-14); the thread page has one reply form, and its status reads "✓ Resolved"; phone list rows keep the challenge name and last activity.
 
 ### Design direction
 
@@ -130,7 +130,7 @@ Low-fidelity wireframes of the four screens, using real rows from the data. They
 - **Light theme**, chosen for reading long threads. A dark theme is a stretch goal; MUI makes it cheap.
 - **Votes and helpful counts are display only.** Voting would be a new data change and is listed under What's next.
 - **Type:** Atkinson Hyperlegible for all UI and body text, chosen for legibility, which fits the accessibility story. JetBrains Mono only inside code blocks.
-- **Color (MUI theme):** ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7. Status: Open uses waiting, Answered neutral grey, Resolved solved (with ✓ when there is an accepted answer), Closed a grey outline. Action blue is for links and buttons only, never for status. Status always pairs color with a word.
+- **Color (MUI theme):** ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7; muted text #566074, input border #737D8F, chip tints solved #EDF3F3 and waiting #F5F1EE, all checked against WCAG AA (D50). Status: Open uses waiting, Answered neutral grey, Resolved solved (with ✓ when there is an accepted answer), Closed a grey outline. Action blue is for links and buttons only, never for status. Status always pairs color with a word.
 - **Copy:** plain words from the learner's side ("Ask a question", "Try again"), sentence case, no internal IDs on screen.
 
 ### Community list
@@ -184,7 +184,7 @@ Only the list and the thread page get phone wireframes, because they change stru
 | NFR-3 | Realism | The mock server adds a 200–500 ms delay and returns real HTTP status codes (400, 403, 404, 409), so loading and error states are real. |
 | NFR-4 | Responsive | Usable from 375 px wide. |
 | NFR-5 | Testing | Unit tests for data normalization, the query functions and the permission rules. Component tests for list filtering, replying and role gating. One Playwright run through the main flow. All green before each commit. |
-| NFR-6 | Code quality | TypeScript strict mode, ESLint and Prettier, folders by feature, no `any`. |
+| NFR-6 | Code quality | TypeScript strict mode, ESLint and Prettier, one folder per page with shared UI in `components/`, no `any`. |
 | NFR-7 | Documentation | README covers setup, scripts, assumptions, architecture, trade-offs and what's next. `DECISIONS.md` holds the decision log. |
 | NFR-8 | AI workflow | `AGENTS.md` holds the conventions for any coding agent; `CLAUDE.md` imports it. Each slice starts in plan mode. One commit per slice, with a message that explains why. Every diff is read before commit. |
 
@@ -265,7 +265,7 @@ Five milestones, each ending in a working state that could be submitted. Every d
 - [x] Domain types, normalization and `can()`, with unit tests
 - [x] Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
 - [x] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
-- [ ] App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
+- [x] App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
 - [ ] Community list: rows, paging, states, live region, sidebar categories, intent tabs (FR-1, FR-3 to FR-7)
 - [ ] Search and More filters: tag, challenge chip; priority and assignee for the admin (FR-2, FR-4, FR-5)
 

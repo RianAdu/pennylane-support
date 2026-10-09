@@ -1,9 +1,9 @@
 import { act, waitFor } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { useRole } from "../../../providers/role/useRole";
-import { rawConversation } from "../../../test/fixtures";
-import { renderHookWithProviders } from "../../../test/renderHookWithProviders";
-import { serve } from "../../../test/serve";
+import { rawConversation } from "../../../test-utils/fixtures";
+import { renderHookWithProviders } from "../../../test-utils/renderHookWithProviders";
+import { serve } from "../../../test-utils/serve";
 import { useConversations } from "../useConversations";
 
 it("never shows the other role's rows after a role switch", async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RawConversation } from "../../../domain/types";
-import { rawChallenge, rawConversation, rawPost } from "../../../test/fixtures";
+import { rawChallenge, rawConversation, rawPost } from "../../../test-utils/fixtures";
 import { createStore } from "../../db/store";
 import { listConversations } from "../listConversations";
 import { parseListParams, type ListParams } from "../parseListParams";

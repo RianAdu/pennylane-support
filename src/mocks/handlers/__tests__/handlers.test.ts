@@ -1,8 +1,8 @@
 import { expect, it } from "vitest";
 import { ROLE_HEADER, type ConversationSummary, type Meta, type Paged } from "../../../api/contract";
 import { apiGet } from "../../../api/http";
-import { rawConversation } from "../../../test/fixtures";
-import { serve } from "../../../test/serve";
+import { rawConversation } from "../../../test-utils/fixtures";
+import { serve } from "../../../test-utils/serve";
 
 const conversations = [
   rawConversation({ identifier: "urgent", priority: "urgent", assigned_to: "community_mod" }),

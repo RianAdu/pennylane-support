@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rawConversation } from "../../../test/fixtures";
+import { rawConversation } from "../../../test-utils/fixtures";
 import { createStore } from "../../db/store";
 import { getMeta } from "../getMeta";
 

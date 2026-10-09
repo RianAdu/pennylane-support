@@ -7,7 +7,7 @@ import {
   orderPosts,
   stripDescriptionMetadata,
 } from "../normalize";
-import { rawChallenge, rawConversation, rawPost } from "../../test/fixtures";
+import { rawChallenge, rawConversation, rawPost } from "../../test-utils/fixtures";
 import type { RawConversation } from "../types";
 
 const postIds = (posts: readonly { post_id: number }[]) => posts.map((post) => post.post_id);
