@@ -1,4 +1,4 @@
-import type { Challenge, ConversationStatus, Post, Priority } from "../domain/types";
+import type { Challenge, ChallengeStatus, ConversationStatus, Post, Priority } from "../domain/types";
 
 // The HTTP contract: the shapes that cross `/api`. The mock server implements it as a real backend would, and the
 // app reads it through the hooks in this folder.
@@ -85,6 +85,45 @@ export type ChallengeDetail = Challenge & {
   openQuestionCount: number;
   /** Another challenge has the same title, so the category is shown beside it. */
   titleRepeats: boolean;
+};
+
+/** One month of new conversations. */
+export type MonthCount = {
+  /** The UTC month a conversation was started in, as "2024-02". */
+  month: string;
+  count: number;
+};
+
+/** One row of "Where learners struggle". */
+export type StrugglingChallenge = {
+  challengeId: string;
+  title: string;
+  category: string;
+  /** Another challenge has the same title, so the category is shown beside it. */
+  titleRepeats: boolean;
+  /** A draft or archived challenge is ranked too: its threads are still waiting. */
+  status: ChallengeStatus;
+  /** How many threads about this challenge have the status open. */
+  openCount: number;
+  /** The share of attempts that complete the challenge, from 0 to 1. */
+  completionRate: number;
+};
+
+/** What `GET /api/insights` returns, to an admin only. Aggregated by the server; the page only formats it. */
+export type Insights = {
+  /** All conversations: what the counts below are a share of. */
+  total: number;
+  open: number;
+  openUnassigned: number;
+  /** Over resolved and closed conversations. `null` when there are none. */
+  medianResolutionHours: number | null;
+  withAcceptedAnswer: number;
+  /** Every month from the first conversation to the last, in order, with 0 for a month without any. */
+  perMonth: MonthCount[];
+  /** `null` when there are no conversations. */
+  busiestMonth: MonthCount | null;
+  /** The challenges with the most open threads, most first. */
+  struggling: StrugglingChallenge[];
 };
 
 /** The request header that carries the viewer's role. A real backend would read the session instead. */

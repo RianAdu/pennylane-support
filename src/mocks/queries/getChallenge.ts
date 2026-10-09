@@ -1,5 +1,6 @@
 import type { ChallengeDetail } from "../../api/contract";
 import type { Store } from "../db/store";
+import { titleRepeats } from "./titleRepeats";
 
 /**
  * One challenge with what the support system knows about it. A draft or archived challenge is returned like any
@@ -14,8 +15,5 @@ export const getChallenge = (store: Store, id: string): ChallengeDetail | undefi
   const openQuestionCount = store.conversations.filter((conversation) => {
     return conversation.challengeId === id && conversation.status === "open";
   }).length;
-  const titleRepeats = [...store.challenges.values()].some((other) => {
-    return other.id !== id && other.title === challenge.title;
-  });
-  return { ...challenge, openQuestionCount, titleRepeats };
+  return { ...challenge, openQuestionCount, titleRepeats: titleRepeats(store, challenge) };
 };

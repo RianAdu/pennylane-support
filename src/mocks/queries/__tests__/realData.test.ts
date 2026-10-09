@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ConversationTab } from "../../../api/contract";
 import { loadStore } from "../../db/store";
+import { computeInsights } from "../computeInsights";
 import { getMeta } from "../getMeta";
 import { listConversations } from "../listConversations";
 import { parseListParams } from "../parseListParams";
@@ -31,5 +32,17 @@ describe("the brief's data", () => {
 
     expect(categories).toHaveLength(13);
     expect(categories.reduce((sum, category) => sum + category.count, 0)).toBe(800);
+  });
+
+  // Counted by hand in the raw file. The median is over the 425 resolved and closed threads.
+  it("gives the insights that were counted by hand", () => {
+    expect(computeInsights(store)).toMatchObject({
+      total: 800,
+      open: 128,
+      openUnassigned: 30,
+      medianResolutionHours: 63.7,
+      withAcceptedAnswer: 357,
+      busiestMonth: { month: "2024-02", count: 64 },
+    });
   });
 });

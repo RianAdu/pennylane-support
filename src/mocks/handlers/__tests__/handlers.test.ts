@@ -98,6 +98,13 @@ it("answers 404 for a challenge that does not exist", async () => {
   });
 });
 
+it("refuses a learner the insights with 403 and gives them to an admin", async () => {
+  serve(conversations);
+
+  await expect(apiGet("/api/insights", "learner")).rejects.toMatchObject({ name: "ApiError", status: 403 });
+  await expect(apiGet("/api/insights", "admin")).resolves.toMatchObject({ total: 2 });
+});
+
 it("leaves priority and assignee out of a learner's thread, and gives them to an admin", async () => {
   serve(conversations);
 
