@@ -279,8 +279,8 @@ With the foundation in place, the remaining work was prioritized (D53) into thre
 
 ### M3 · Polish and submit
 
-- [ ] Design, responsive and accessibility pass over all screens: 1440 px and 375 px, keyboard, axe; fix findings
-- [ ] One Playwright run: filter, open a conversation, reply
+- [x] Design, responsive and accessibility pass over all screens: 1440 px and 375 px, keyboard, axe; fix findings
+- [x] One Playwright run: filter, open a conversation, reply
 - [ ] README: setup, assumptions, architecture, trade-offs, what's next
 - [ ] Fresh-clone check: `npm install`, `npm run dev`, `npm test`
 - [ ] Send the repo link to Diego

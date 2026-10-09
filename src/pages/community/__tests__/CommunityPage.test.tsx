@@ -49,6 +49,22 @@ it("narrows the list by category, then tab, then search, and says how many are l
   await expectNoAxeViolations(document.body);
 });
 
+it("keeps a tab picked while a search is still waiting to run", async () => {
+  serve([
+    rawConversation({ identifier: "a", topic: "Gradient is zero", status: "open" }),
+    rawConversation({ identifier: "b", topic: "Gradient mismatch", status: "resolved" }),
+  ]);
+  renderApp("/");
+  await expectQuestions(["Gradient is zero", "Gradient mismatch"]);
+
+  await userEvent.type(screen.getByRole("searchbox", { name: "Search questions" }), "gradient");
+  await userEvent.click(screen.getByRole("tab", { name: "Unanswered" }));
+
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 result for “gradient”"));
+  await expectQuestions(["Gradient is zero"]);
+  expect(screen.getByRole("tab", { name: "Unanswered" })).toHaveAttribute("aria-selected", "true");
+});
+
 it("keeps Needs attention for the admin and returns a learner to Latest", async () => {
   serve([
     rawConversation({ identifier: "a", topic: "Nobody owns this", status: "open", assigned_to: null }),

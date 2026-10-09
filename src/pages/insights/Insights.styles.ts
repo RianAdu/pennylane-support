@@ -1,8 +1,9 @@
 import type { SxProps, Theme } from "@mui/material/styles";
+import { SECTION_GAP } from "../../layouts/shared/sharedSizes";
 
 // The `sx` objects of the Insights page's parts, so the components read as structure.
 
-export const sectionSx = { mt: { xs: 5, md: 6 } } as const;
+export const sectionSx = { mt: SECTION_GAP } as const;
 
 /** The line under a section's heading that says what the figures below it show. */
 export const summarySx = { mt: 0.5, mb: 2, maxWidth: "64ch" } as const;

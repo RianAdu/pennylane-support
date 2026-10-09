@@ -4,7 +4,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import type { Theme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 
 const LIST_PATH = "/";
@@ -58,11 +58,17 @@ export const SearchField = () => {
     void navigate({ pathname: LIST_PATH, search: next.toString() });
   };
 
+  // The wait ends on a later render than the one that started it, and the address may have changed in between (a tab
+  // picked while the wait runs). The timer calls the newest `search`, which reads the address as it is by then.
+  const latestSearch = useRef(search);
   useEffect(() => {
-    const timer = window.setTimeout(() => search(text), DEBOUNCE_MS);
+    latestSearch.current = search;
+  });
+
+  // Only typing starts the wait.
+  useEffect(() => {
+    const timer = window.setTimeout(() => latestSearch.current(text), DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-    // Only typing starts the wait. `search` reads the address as it is when the wait ends.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
 
   const submit = (event: SubmitEvent<HTMLFormElement>) => {

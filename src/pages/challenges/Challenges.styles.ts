@@ -1,5 +1,5 @@
 import { alpha, type SxProps, type Theme } from "@mui/material/styles";
-import { SHEET_PADDING, TOP_BAR_HEIGHT } from "../../layouts/shared/sharedSizes";
+import { SECTION_GAP, SHEET_PADDING, TOP_BAR_HEIGHT } from "../../layouts/shared/sharedSizes";
 import { CARD_SHADOW } from "../../theme/theme";
 
 // The `sx` objects of the Challenges page's parts, so the components read as structure.
@@ -8,7 +8,7 @@ export const CARD_WIDTH = { xs: 260, sm: 280 } as const;
 export const CARD_HEIGHT = 196;
 
 export const categorySx = {
-  mt: { xs: 4, md: 5 },
+  mt: SECTION_GAP,
   "&:first-of-type": { mt: 1 },
   // A link from the navigation lands here, and must stop below the sticky top bar.
   scrollMarginTop: TOP_BAR_HEIGHT + 16,

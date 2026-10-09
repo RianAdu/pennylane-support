@@ -19,7 +19,7 @@ export const ErrorState = ({ title, message, onRetry, asPageTitle }: ErrorStateP
       description={message}
       asPageTitle={asPageTitle}
       action={
-        <Button variant="contained" disableElevation onClick={onRetry}>
+        <Button variant="contained" onClick={onRetry}>
           Try again
         </Button>
       }

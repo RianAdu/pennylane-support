@@ -30,8 +30,9 @@ export const TopBar = ({ menuAtEveryWidth, onOpenMenu }: TopBarProps) => {
         px: { xs: 1, md: 3 },
         bgcolor: "topBar.main",
         color: "common.white",
-        // Action blue does not show on ink, so the ring is the bar's light accent here.
-        "& :focus-visible, & .Mui-focusVisible": { outlineColor: (theme) => theme.palette.topBar.accent },
+        // Action blue does not show on ink, so the ring is the bar's light accent here. The selector is doubled to
+        // outrank the theme's own ring on buttons, which would otherwise keep theirs in action blue.
+        "&& :focus-visible, && .Mui-focusVisible": { outlineColor: (theme) => theme.palette.topBar.accent },
       }}
     >
       <IconButton

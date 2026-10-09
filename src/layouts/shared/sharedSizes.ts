@@ -7,3 +7,5 @@ export const SHEET_PADDING = 44;
 /** The thread page's rail, "About this challenge", and the room between it and the reading column. */
 export const RAIL_WIDTH = 240;
 export const RAIL_GAP = 48;
+/** The room above a section of a page (a category's shelf, a block of figures), in the theme's spacing. */
+export const SECTION_GAP = { xs: 5, md: 6 } as const;

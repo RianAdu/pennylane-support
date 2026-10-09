@@ -140,7 +140,7 @@ export const CommunityPage = () => {
               title="No questions match"
               description="Nothing fits this search and these filters. Clear them to see every question in this view."
               action={
-                <Button variant="contained" disableElevation onClick={clearFilters}>
+                <Button variant="contained" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

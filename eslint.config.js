@@ -12,7 +12,7 @@ const testTitle = (pattern) =>
   ].map((call) => `${call} > Literal.arguments:first-child[value=${pattern}]`);
 
 export default defineConfig([
-  globalIgnores(["dist", "coverage", "data", "public/mockServiceWorker.js"]),
+  globalIgnores(["dist", "coverage", "data", "public/mockServiceWorker.js", "test-results", "playwright-report"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [tseslint.configs.recommended, reactHooks.configs.flat.recommended],
@@ -27,7 +27,7 @@ export default defineConfig([
   },
   {
     // AGENTS.md, Testing rules: test names describe behaviour in plain words.
-    files: ["**/*.test.{ts,tsx}"],
+    files: ["**/*.test.{ts,tsx}", "tests/e2e/**/*.spec.ts"],
     rules: {
       "no-restricted-syntax": [
         "error",

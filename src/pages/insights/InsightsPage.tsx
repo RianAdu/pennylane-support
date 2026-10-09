@@ -1,10 +1,10 @@
-import MuiLink from "@mui/material/Link";
-import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { Insights } from "../../api/contract";
 import { useInsights } from "../../api/hooks/useInsights";
 import { can } from "../../domain/permissions";
+import { EmptyState } from "../../error-handling/components/EmptyState";
 import { ErrorState } from "../../error-handling/components/ErrorState";
 import { PageHeader } from "../../layouts/PageHeader/PageHeader";
 import { useRole } from "../../providers/role/useRole";
@@ -16,16 +16,16 @@ import { Tiles } from "./Tiles";
 // The link is hidden from a learner, but the address still works: say why the page is empty and what to do.
 const renderNotPermitted = () => {
   return (
-    <>
-      <Typography variant="h1">Insights are for admins</Typography>
-      <Typography sx={{ mt: 1, maxWidth: "72ch" }}>
-        You are viewing as a learner. Switch to Admin with “Viewing as” to see this page, or{" "}
-        <MuiLink component={Link} to="/">
-          go back to Community
-        </MuiLink>
-        .
-      </Typography>
-    </>
+    <EmptyState
+      asPageTitle
+      title="Insights are for admins"
+      description="You are viewing as a learner. Switch to Admin with “Viewing as” to see this page."
+      action={
+        <Button component={Link} to="/" variant="contained">
+          Back to Community
+        </Button>
+      }
+    />
   );
 };
 

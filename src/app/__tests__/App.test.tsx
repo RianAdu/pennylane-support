@@ -30,6 +30,16 @@ it("tells a learner who opens the insights address that the page is for admins",
   renderApp("/insights", { role: "learner" });
 
   expect(screen.getByRole("heading", { level: 1, name: "Insights are for admins" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Back to Community" })).toHaveAttribute("href", "/");
+  await expectNoAxeViolations(document.body);
+});
+
+it("gives an unknown address a title and a way back to Community", async () => {
+  serve([rawConversation()]);
+  renderApp("/no-such-page");
+
+  expect(screen.getByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Back to Community" })).toHaveAttribute("href", "/");
   await expectNoAxeViolations(document.body);
 });
 
