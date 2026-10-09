@@ -11,6 +11,8 @@ const ACTION = "#3D45C4";
 const SOLVED = "#157A55";
 const WAITING = "#9A5B00";
 const RULES = "#DDE1E7";
+/** A refusal or a mistake in a form: the field's edge, its message and the bar on an inline error. */
+const ERROR = "#B3261E";
 /** Secondary text: counts, hints, placeholders. */
 const MUTED = "#566074";
 /** The edge of a field or an outlined control. `RULES` is too faint to mark something you can type in (needs 3:1). */
@@ -87,6 +89,7 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     primary: { main: ACTION, contrastText: "#FFFFFF" },
+    error: { main: ERROR },
     text: { primary: INK, secondary: MUTED },
     background: { default: CANVAS, paper: PAPER },
     divider: RULES,

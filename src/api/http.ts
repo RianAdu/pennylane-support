@@ -39,11 +39,30 @@ const errorMessage = async (response: Response): Promise<string> => {
   return FALLBACK_MESSAGE;
 };
 
-/** The one place the app calls `fetch` for a read. Every request carries the viewer's role. */
-export const apiGet = async <T>(path: string, role: ViewerRole, query: Record<string, QueryValue> = {}): Promise<T> => {
-  const response = await fetch(`${path}${toSearch(query)}`, { headers: { [ROLE_HEADER]: role } });
+const read = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     throw new ApiError(response.status, await errorMessage(response));
   }
   return (await response.json()) as T;
+};
+
+/** The one place the app calls `fetch` for a read. Every request carries the viewer's role. */
+export const apiGet = async <T>(path: string, role: ViewerRole, query: Record<string, QueryValue> = {}): Promise<T> => {
+  return read<T>(await fetch(`${path}${toSearch(query)}`, { headers: { [ROLE_HEADER]: role } }));
+};
+
+/** The one place the app calls `fetch` for a change. The server answers with the record as it now stands. */
+export const apiSend = async <T>(
+  method: "POST" | "PATCH",
+  path: string,
+  role: ViewerRole,
+  body: unknown,
+): Promise<T> => {
+  return read<T>(
+    await fetch(path, {
+      method,
+      headers: { [ROLE_HEADER]: role, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
 };

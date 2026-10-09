@@ -2,11 +2,12 @@ import { expect, it } from "vitest";
 import {
   ROLE_HEADER,
   type ChallengeDetail,
+  type ConversationDetail,
   type ConversationSummary,
   type Meta,
   type Paged,
 } from "../../../api/contract";
-import { apiGet } from "../../../api/http";
+import { apiGet, apiSend } from "../../../api/http";
 import { rawChallenge, rawConversation } from "../../../test-utils/fixtures";
 import { serve } from "../../../test-utils/serve";
 
@@ -94,5 +95,62 @@ it("answers 404 for a challenge that does not exist", async () => {
   await expect(apiGet("/api/challenges/CHAL_MISSING", "learner")).rejects.toMatchObject({
     name: "ApiError",
     status: 404,
+  });
+});
+
+it("leaves priority and assignee out of a learner's thread, and gives them to an admin", async () => {
+  serve(conversations);
+
+  const forLearner = await apiGet<ConversationDetail>("/api/conversations/urgent", "learner");
+  const forAdmin = await apiGet<ConversationDetail>("/api/conversations/urgent", "admin");
+
+  expect(forLearner).not.toHaveProperty("priority");
+  expect(forLearner).not.toHaveProperty("assignee");
+  expect(forAdmin).toMatchObject({ priority: "urgent", assignee: "community_mod" });
+});
+
+it("answers 404 for a thread that does not exist", async () => {
+  serve(conversations);
+
+  await expect(apiGet("/api/conversations/missing", "learner")).rejects.toMatchObject({ status: 404 });
+});
+
+it("refuses a learner's status change with 403 and leaves the status as it was", async () => {
+  serve([rawConversation({ identifier: "thread", status: "open" })]);
+
+  await expect(apiSend("PATCH", "/api/conversations/thread", "learner", { status: "closed" })).rejects.toMatchObject({
+    name: "ApiError",
+    status: 403,
+  });
+
+  expect(await apiGet<ConversationDetail>("/api/conversations/thread", "learner")).toMatchObject({ status: "open" });
+});
+
+it("takes a status from an admin and nothing else", async () => {
+  serve([rawConversation({ identifier: "thread", status: "open", is_locked: false })]);
+
+  await expect(
+    apiSend("PATCH", "/api/conversations/thread", "admin", { status: "closed", locked: true }),
+  ).rejects.toMatchObject({ status: 400 });
+  const changed = await apiSend<ConversationDetail>("PATCH", "/api/conversations/thread", "admin", {
+    status: "closed",
+  });
+
+  expect(changed).toMatchObject({ status: "closed", locked: false });
+});
+
+it("refuses a reply to a locked thread with 409", async () => {
+  serve([rawConversation({ identifier: "thread", is_locked: true })]);
+
+  await expect(
+    apiSend("POST", "/api/conversations/thread/posts", "admin", { content: "One more thing." }),
+  ).rejects.toMatchObject({ status: 409 });
+});
+
+it("refuses an empty reply with 400", async () => {
+  serve([rawConversation({ identifier: "thread" })]);
+
+  await expect(apiSend("POST", "/api/conversations/thread/posts", "learner", { content: " " })).rejects.toMatchObject({
+    status: 400,
   });
 });

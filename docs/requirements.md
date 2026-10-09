@@ -97,7 +97,7 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 - **FR-11** One reply form at the bottom of the thread, with validation. On a locked thread it is replaced by an explanation. On phones the pinned Reply button scrolls to the form.
 - **FR-12** (cut) On their own threads, learners can mark an accepted answer and mark the thread solved.
 - **FR-13** Admin: a ⋯ menu in the header that changes the status. The change shows a pending state and the server's refusal if it comes. (cut) Priority, assignee, pin and lock in the same menu.
-- **FR-22** Right rail: "About this challenge" (title, with its category when the title repeats; difficulty, completion rate, attempts, hints). (cut) "Related threads" on the same challenge. A hidden challenge is marked "Archived challenge" or "Draft challenge" as text. The sidebar is hidden on this page; the top bar's menu button opens it as a drawer, and the breadcrumb keeps the place.
+- **FR-22** Right rail: "About this challenge" (title, with its category when the title repeats; difficulty, completion rate, attempts) with a link to the questions about that challenge. Below 1200 px it is a compact strip under the header (D64). (cut) The challenge's hints, and "Related threads" on the same challenge. A hidden challenge is marked "Archived challenge" or "Draft challenge" as text. The sidebar is hidden on this page; the top bar's menu button opens it as a drawer, and the breadcrumb keeps the place.
 - **FR-14** (cut) Ask a question, from the list or a challenge. Before posting, show that challenge's hints and similar existing threads, to cut duplicate questions.
 
 ### Challenges
@@ -167,7 +167,7 @@ Below 900 px the sidebar becomes a slide-in menu and every screen becomes one co
 | --- | --- | --- | --- |
 | Navigation | Sidebar always visible, except on the thread page, where the menu button opens it as a drawer | Same | Menu button opens the sidebar as a drawer from the left, listing all 13 categories and holding the role switcher |
 | Community list | Full rows: vote column, avatar, two-line excerpt | Same | Avatar and vote column hidden; votes join the status line; one-line excerpt; tabs scroll sideways |
-| Thread | Thread plus right rail | Rail moves below the thread | Challenge becomes a compact strip under the title; Reply button stays pinned to the bottom |
+| Thread | Thread plus right rail | Challenge becomes a compact strip under the title (D64) | Same strip; Reply button stays pinned to the bottom |
 | Challenges | Two cards per category row, arrows scroll sideways | Same | One card per row, swipe sideways within a category |
 | Insights | Four tiles, two charts side by side | Same | Tiles 2×2, charts stacked full width |
 
@@ -272,7 +272,7 @@ With the foundation in place, the remaining work was prioritized (D53) into thre
 ### M2 · Screens
 
 - [x] Slice 6 · Community list and design system: the shared pieces (status chip, avatar, list row, page header, empty and error states), the lifted shell, then rows, intent tabs with Needs attention, sidebar categories, top-bar search, the challenge chip, paging, states and the live region (FR-1 to FR-7)
-- [ ] Slice 7 · Thread page: header, answer-first posts, "About this challenge" rail, reply form, the admin's status change with its server-side 403 (FR-8 to FR-11, FR-13, FR-22)
+- [x] Slice 7 · Thread page: header, answer-first posts, "About this challenge" rail, reply form, the admin's status change with its server-side 403 (FR-8 to FR-11, FR-13, FR-22)
 - [ ] Slice 8 · Insights and Challenges: `/api/insights` with a unit test against hand-checked numbers, four tiles and two charts with text summaries, the "not permitted" state; challenge cards by category, each opening its filtered list (FR-15, FR-18 to FR-21). For the hand check: in 20 resolved or closed conversations `resolution_time_hours` is shorter than the span of the posts. Use the field as given; no rule
 
 **Done when:** each role can be demoed end to end, the list filters, searches and pages through the mock server with state in the URL, and a forbidden action is blocked by the server even if the UI were bypassed.
@@ -294,7 +294,7 @@ With the foundation in place, the remaining work was prioritized (D53) into thre
 1. More filters: tag, a challenge picker, and priority and assignee for the admin (part of FR-4). The intent tabs, the categories, search and the challenge chip stay
 2. Admin actions other than the status change: assign, set priority, pin and lock (part of FR-13)
 3. Learner actions on their own threads, marking an accepted answer and marking solved (FR-12), and with them the demo learner (D29)
-4. Related threads in the thread rail (part of FR-22); "About this challenge" stays
+4. Related threads and the challenge's hints in the thread rail (part of FR-22); "About this challenge" stays
 5. Challenge page (FR-16); cards open the filtered list instead
 6. Difficulty filter on the Challenges page (part of FR-15)
 7. Two Insights charts: conversations by status, since the tiles already show the backlog, and median resolution time by category (part of FR-19). The four tiles, new conversations per month and where learners struggle stay

@@ -8,6 +8,10 @@ export const conversationsKey = (role: ViewerRole, query: ConversationListQuery)
   return ["conversations", role, query] as const;
 };
 
+export const conversationKey = (role: ViewerRole, id: string | undefined) => {
+  return ["conversation", role, id] as const;
+};
+
 export const challengeKey = (role: ViewerRole, id: string | undefined) => {
   return ["challenge", role, id] as const;
 };
@@ -15,3 +19,10 @@ export const challengeKey = (role: ViewerRole, id: string | undefined) => {
 export const metaKey = (role: ViewerRole) => {
   return ["meta", role] as const;
 };
+
+/**
+ * What a reply or a status change can make stale: the thread, every list that may hold it and the challenge's count
+ * of open questions. Each is the start of a key, so the cached answers of both roles are refreshed, not only the
+ * current viewer's.
+ */
+export const STALE_AFTER_THREAD_CHANGE = [["conversations"], ["conversation"], ["challenge"]] as const;

@@ -5,11 +5,11 @@ import IconButton from "@mui/material/IconButton";
 import MuiLink from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { Outlet, useMatch } from "react-router";
+import { Outlet, ScrollRestoration, useMatch } from "react-router";
 import { RoleSwitcher } from "../components/RoleSwitcher";
 import { SidebarNav } from "./SidebarNav/SidebarNav";
 import { SHEET_SHADOW } from "../theme/theme";
-import { CONTENT_WIDTH, SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./shared/sharedSizes";
+import { CONTENT_WIDTH, RAIL_GAP, RAIL_WIDTH, SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "./shared/sharedSizes";
 import { MAIN_ID } from "./hooks/useReturnToMainTop";
 import { TopBar } from "./TopBar";
 
@@ -46,6 +46,9 @@ export const AppLayout = () => {
       >
         Skip to main content
       </MuiLink>
+      {/* A page opened by a link starts at its top; going back returns to where the viewer was, so a thread opened
+          from far down the list leads back to the same row. */}
+      <ScrollRestoration />
       <TopBar menuAtEveryWidth={onThread} onOpenMenu={() => setMenuOpen(true)} />
       <Box sx={{ display: "flex", flex: 1 }}>
         {!onThread && (
@@ -93,7 +96,11 @@ export const AppLayout = () => {
             sx={{
               flex: { xs: 1, md: "none" },
               width: "100%",
-              maxWidth: { md: CONTENT_WIDTH + 2 * SHEET_PADDING },
+              // The thread page has no sidebar, and from 1200 px gives that room to a rail beside the reading column.
+              maxWidth: {
+                md: CONTENT_WIDTH + 2 * SHEET_PADDING,
+                lg: CONTENT_WIDTH + 2 * SHEET_PADDING + (onThread ? RAIL_GAP + RAIL_WIDTH : 0),
+              },
               mx: "auto",
               px: { xs: 2, md: `${SHEET_PADDING}px` },
               pt: { xs: 3, md: 5 },

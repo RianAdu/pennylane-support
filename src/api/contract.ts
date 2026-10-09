@@ -1,4 +1,4 @@
-import type { Challenge, ConversationStatus, Priority } from "../domain/types";
+import type { Challenge, ConversationStatus, Post, Priority } from "../domain/types";
 
 // The HTTP contract: the shapes that cross `/api`. The mock server implements it as a real backend would, and the
 // app reads it through the hooks in this folder.
@@ -38,6 +38,38 @@ export type ConversationSummary = {
   priority?: Priority;
   /** Admin only: the key is absent from a learner's response. `null` means unassigned. */
   assignee?: string | null;
+};
+
+/** One thread with its posts, as `GET /api/conversations/:id` returns it. */
+export type ConversationDetail = {
+  id: string;
+  title: string;
+  category: string;
+  status: ConversationStatus;
+  tags: string[];
+  createdAt: string;
+  /** A locked thread takes no replies. */
+  locked: boolean;
+  challengeId: string;
+  /** The opening post first, then the replies in time order. */
+  posts: Post[];
+  acceptedPostId: number | null;
+  /** The accepted answer was written by the person who asked. */
+  solvedByAsker: boolean;
+  /** Admin only: the key is absent from a learner's response. */
+  priority?: Priority;
+  /** Admin only: the key is absent from a learner's response. `null` means unassigned. */
+  assignee?: string | null;
+};
+
+/** The body of `POST /api/conversations/:id/posts`. */
+export type ReplyBody = {
+  content: string;
+};
+
+/** The body of `PATCH /api/conversations/:id`. Status is the one field the server takes. */
+export type ConversationPatch = {
+  status: ConversationStatus;
 };
 
 export type Meta = {
