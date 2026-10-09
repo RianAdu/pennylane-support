@@ -39,3 +39,14 @@ Out of scope for the proof of concept:
 - A moderator role between learner and admin
 - Working votes and helpful counts (display only today)
 - A dark theme
+
+Moved to What's next to keep the focus on the support system. The mock server already filters by tag, priority and assignee, and the permission rules for the deferred actions exist and are tested.
+
+- More filters on the Community list: tag, a challenge picker, and priority and assignee for the admin
+- Admin actions beyond the status change: assign, set priority, pin and lock
+- Learners marking an accepted answer or marking their own thread solved, with a signed-in demo learner
+- Related threads in the thread rail
+- A challenge detail page, and a difficulty filter on the Challenges page
+- Two more Insights charts: conversations by status, and median resolution time by category
+- Asking a new question, with the challenge's hints and similar threads shown first
+- Keeping changes across a reload (`sessionStorage`)

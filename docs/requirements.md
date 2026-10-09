@@ -1,6 +1,6 @@
 # PennyLane Support — Requirements & Roadmap
 
-Florian · started Oct 6, 2026 · last updated Oct 8, 2026
+Florian · started Oct 6, 2026 · last updated Oct 9, 2026
 
 > Source of truth for *what* to build. Agent rules live in `AGENTS.md`; the decision history lives in `DECISIONS.md`. Requirement IDs (FR-n, NFR-n) are referenced from commits.
 
@@ -59,33 +59,33 @@ Diego confirmed scope, roles and data scale were left open on purpose, so each c
 
 ## Roles and permissions
 
-The role switcher sets who the *viewer* is: Learner or Admin. The demo learner is one existing learner from the data, fixed in the mock server; threads that learner started count as the viewer's own. The role travels with each request and the mock server checks it too, so a forbidden action returns 403 even if the UI is bypassed.
+The role switcher sets who the *viewer* is: Learner or Admin. The role travels with each request and the mock server checks it too, so a forbidden action returns 403 even if the UI is bypassed.
 
 | Action | Learner | Admin |
 | --- | --- | --- |
 | Browse, search and read | Yes | Yes |
-| Ask a question; reply (not on locked threads) | Yes | Yes |
-| Mark an accepted answer; mark solved | Own threads | Any thread |
-| See priority and assignee; Needs attention view | No | Yes |
-| Change status, assign, set priority | No | Yes |
-| Pin or lock | No | Yes |
+| Reply (not on locked threads) | Yes | Yes |
+| Needs attention view | No | Yes |
+| Change status | No | Yes |
 | Insights | No | Yes |
 
 Mentor, staff and support appear in the data as labels on posts. They show as badges beside the author, a signal that an answer is trustworthy, but they are not viewer roles. A moderator role is listed in the README under What's next.
 
-One permissions function, `can(role, action, context)` in `src/domain/permissions.ts`, encodes this table. The UI calls it to hide controls; the mock server calls it to refuse requests. Each action is one field on the same PATCH endpoint plus one item in the admin ⋯ menu on the thread page.
+One permissions function, `can(role, action, context)` in `src/domain/permissions.ts`, encodes this table. The UI calls it to hide controls; the mock server calls it to refuse requests. The status change is one field on the PATCH endpoint and the one item in the admin ⋯ menu on the thread page.
+
+Moved to What's next (see the cut list): marking an accepted answer or marking a thread solved as a learner, with the demo learner that made "own threads" possible; assigning, setting priority, pinning and locking as the admin. `can()` was built with those actions in the domain slice and keeps them, tested; no screen offers them, and the PATCH handler built in slice 7 accepts `status` only.
 
 ## Functional requirements
 
-IDs let commits, tests and the README point at a requirement. Items marked (cut) are first to go if time runs short.
+IDs let commits, tests and the README point at a requirement. Items marked (cut) moved to What's next in the README; the cut list at the end says why.
 
 ### Community: conversation list (home)
 
 - **FR-1** Paginated list, 20 per page, ordered by latest activity. Each row: the opening post's upvotes (display only), an initials avatar, title, a two-line excerpt, status, the challenge name, reply count and last activity. The excerpt is the opening post's content, cut at a word boundary at 200 characters with an ellipsis; Markdown stripping and a description fallback wait until new questions can be posted (D24). Resolved threads with an accepted answer show a check in the status. No internal IDs on screen.
 - **FR-2** Search in the top bar across topic and description, done by the server and debounced in the UI. It always searches questions: from any other page it opens the Community list with the query.
-- **FR-3** Left sidebar: Community with its 13 categories and thread counts, then Challenges, plus Insights for the admin. Counts are totals per category from `/api/meta` and do not change with the search or filters. Picking a category filters the list and renames the header. Challenge categories join the sidebar with the Challenges page (M2); until then Challenges is a plain link.
-- **FR-4** Intent tabs: Latest (default), Unanswered (status open), Solved (status resolved). "More filters" holds challenge and tag; for the admin, priority and assignee too. A challenge filter already in the URL shows as a removable chip with the challenge name; the challenge picker arrives with the challenges API (M2).
-- **FR-5** Search, category, tab, filters and page live in the URL. Switching to Learner removes the admin-only parameters (priority, assignee, the Needs attention tab) and falls back to Latest.
+- **FR-3** Left sidebar: Community with its 13 categories and thread counts, then Challenges, plus Insights for the admin. Counts are totals per category from `/api/meta` and do not change with the search or filters. Picking a category filters the list and renames the header. Challenge categories join the sidebar with the Challenges page (slice 8); until then Challenges is a plain link.
+- **FR-4** Intent tabs: Latest (default), Unanswered (status open), Solved (status resolved). A challenge filter in the URL shows as a removable chip with the challenge name; it is reached from a challenge card. (cut) "More filters" with tag and a challenge picker and, for the admin, priority and assignee.
+- **FR-5** Search, category, tab, the challenge filter and page live in the URL. Switching to Learner removes the admin-only Needs attention tab and falls back to Latest.
 - **FR-6** Loading (skeleton), empty (with "Clear filters") and error (with "Try again") states. "Clear filters" clears the search and every filter but keeps the tab. The result count is announced to screen readers.
 - **FR-7** Admin only: a "Needs attention" tab showing open threads that are unassigned or high or urgent priority. The server answers a learner's request for it with 403.
 
@@ -95,15 +95,15 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 - **FR-9** The accepted answer comes next, marked A: and "Accepted answer", or "Solved by the asker". Other replies follow in time order. An answered thread without an accepted answer says "No accepted answer"; this label appears on the thread page only.
 - **FR-10** Each post: initials avatar, author, a badge for mentor, staff or support, date, body as safe Markdown, and "N people found this helpful".
 - **FR-11** One reply form at the bottom of the thread, with validation. On a locked thread it is replaced by an explanation. On phones the pinned Reply button scrolls to the form.
-- **FR-12** On their own threads, learners can mark an accepted answer and mark the thread solved.
-- **FR-13** Admin: a ⋯ menu in the header with status, priority, assignee, pin and lock. Each change shows a pending state and the server's refusal if it comes.
-- **FR-22** Right rail: "About this challenge" (title, with its category when the title repeats; difficulty, completion rate, attempts, hints, Open challenge) and "Related threads" on the same challenge. A hidden challenge is marked "Archived challenge" or "Draft challenge" as text. The sidebar is hidden on this page; the top bar's menu button opens it as a drawer, and the breadcrumb keeps the place.
+- **FR-12** (cut) On their own threads, learners can mark an accepted answer and mark the thread solved.
+- **FR-13** Admin: a ⋯ menu in the header that changes the status. The change shows a pending state and the server's refusal if it comes. (cut) Priority, assignee, pin and lock in the same menu.
+- **FR-22** Right rail: "About this challenge" (title, with its category when the title repeats; difficulty, completion rate, attempts, hints). (cut) "Related threads" on the same challenge. A hidden challenge is marked "Archived challenge" or "Draft challenge" as text. The sidebar is hidden on this page; the top bar's menu button opens it as a drawer, and the breadcrumb keeps the place.
 - **FR-14** (cut) Ask a question, from the list or a challenge. Before posting, show that challenge's hints and similar existing threads, to cut duplicate questions.
 
 ### Challenges
 
-- **FR-15** Challenge cards grouped by category. Each card: title (with its category when the title repeats), difficulty, one-line description, and how many questions are open. A difficulty filter covering all four levels (Beginner, Intermediate, Advanced, Expert); drafts and archived hidden. The page has no search of its own (cut; see the cut list). `includeHidden` is honoured for the admin only.
-- **FR-16** (cut) Challenge page: description, learning objectives, hints (collapsed), its threads with open ones first, and "Ask a question". If cut, the card opens the conversation list filtered to that challenge.
+- **FR-15** Challenge cards grouped by category. Each card: title (with its category when the title repeats), difficulty, one-line description, and how many questions are open. A card opens the Community list filtered to that challenge. Drafts and archived hidden. (cut) A difficulty filter covering all four levels (Beginner, Intermediate, Advanced, Expert), and a search of its own. `includeHidden` is honoured for the admin only.
+- **FR-16** (cut) Challenge page: description, learning objectives, hints (collapsed), its threads with open ones first, and "Ask a question".
 
 ### Roles
 
@@ -112,15 +112,15 @@ IDs let commits, tests and the README point at a requirement. Items marked (cut)
 ### Insights (admin)
 
 - **FR-18** Summary tiles: open conversations, open and unassigned, median resolution time, share with an accepted answer.
-- **FR-19** Charts: new conversations per month; conversations by status; median resolution time by category; where learners struggle, ranking challenges by open threads alongside their completion rate. Each challenge links to its filtered list.
+- **FR-19** Charts: new conversations per month; where learners struggle, ranking challenges by open threads alongside their completion rate, each linking to its filtered list. (cut) Conversations by status; median resolution time by category.
 - **FR-20** Metrics are computed by the mock server (`/api/insights`), as a backend would aggregate them, not in the browser.
 - **FR-21** Each chart has a one-line text summary, so the insight doesn't depend on seeing the chart.
 
 ## Screens
 
-Low-fidelity wireframes of the four screens, using real rows from the data. They fix layout, hierarchy and content, not pixels: spacing, exact sizes and the final colors come from the MUI theme. Where a wireframe and the text disagree, the text wins. Every screen is designed from one user job: a learner asking "has someone solved this?", and an admin asking "is support keeping up?". Anything that doesn't serve that job is one click away or gone.
+Low-fidelity wireframes of the four screens, using real rows from the data. They fix structure and content, not visual design: the visual design is held to a production standard and built as a small design system (see Design direction). Where a wireframe and the text disagree, the text wins. Every screen is designed from one user job: a learner asking "has someone solved this?", and an admin asking "is support keeping up?". Anything that doesn't serve that job is one click away or gone.
 
-**Where the text supersedes the wireframes:** the Open chip is not blue (see Color below); the phone drawer lists all 13 categories, with no "7 more categories" row; the top-bar search always reads "Search questions" (shortened to "Search" as the visible hint below 600 px, where the full text is cut off; its accessible name does not change); the difficulty tabs include Expert; "Ask a question" appears only once the ask form exists (FR-14); the thread page has one reply form, and its status reads "✓ Resolved"; phone list rows keep the challenge name and last activity.
+**Where the text supersedes the wireframes:** the Open chip is not blue (see Color below); the phone drawer lists all 13 categories, with no "7 more categories" row; the top-bar search always reads "Search questions" (shortened to "Search" as the visible hint below 600 px, where the full text is cut off; its accessible name does not change); "Ask a question" appears only once the ask form exists (FR-14); the thread page has one reply form, and its status reads "✓ Resolved"; phone list rows keep the challenge name and last activity. The wireframes were drawn before the D53 prioritization, so they still show what moved to What's next: More filters, related threads, the difficulty tabs, "Open challenge" and the "by status" and "resolution time by category" charts.
 
 ### Design direction
 
@@ -129,6 +129,7 @@ Low-fidelity wireframes of the four screens, using real rows from the data. They
 - **Quiet everywhere else:** lists are rows separated by rules, not stacks of cards; challenges are the one place cards fit, because they are content. One reading column of at most 72 characters. Everything left-aligned.
 - **Light theme**, chosen for reading long threads. A dark theme is a stretch goal; MUI makes it cheap.
 - **Votes and helpful counts are display only.** Voting would be a new data change and is listed under What's next.
+- **Production quality (D54):** the wireframes say what is on a screen, not how it looks. The shared visual pieces (status chip, avatar, list row, page header, empty and error states) are built once as a design system with theme-level styles and reused on every screen. The colour tokens and fonts below may be refined when the contrast is checked again.
 - **Type:** Atkinson Hyperlegible for all UI and body text, chosen for legibility, which fits the accessibility story. JetBrains Mono only inside code blocks.
 - **Color (MUI theme):** ink #1E2533, paper #FBFBFD, action #2D4FA8, solved #157A55, waiting #9A5B00, rules #DDE1E7; muted text #566074, input border #737D8F, chip tints solved #EDF3F3 and waiting #F5F1EE, all checked against WCAG AA (D50). Status: Open uses waiting, Answered neutral grey, Resolved solved (with ✓ when there is an accepted answer), Closed a grey outline. Action blue is for links and buttons only, never for status. Status always pairs color with a word.
 - **Copy:** plain words from the learner's side ("Ask a question", "Try again"), sentence case, no internal IDs on screen.
@@ -137,13 +138,13 @@ Low-fidelity wireframes of the four screens, using real rows from the data. They
 
 ![Community list with category sidebar, learner view](wireframes/community-list.png)
 
-A labelled sidebar turns the 13 forum categories into a browsing path. Intent tabs (Latest, Unanswered, Solved) replace the status dropdown. Each row shows the vote count, the question, a two-line excerpt so learners can judge relevance without opening it, then status and the challenge. Votes are display only.
+A labelled sidebar turns the 13 forum categories into a browsing path. Intent tabs (Latest, Unanswered, Solved) replace the status dropdown and the filter bar. Each row shows the vote count, the question, a two-line excerpt so learners can judge relevance without opening it, then status and the challenge. Votes are display only.
 
 ### Thread page
 
 ![Thread page, learner view (CONV_0134)](wireframes/thread.png)
 
-Q: and A: markers say which post is the question and which is the answer, so the eye lands on the answer first. The opening post's upvotes read as "15 people have this question too", which tells a learner they're not alone. The rail gives the challenge's context and other threads on the same challenge, a check before asking again. Admin actions sit behind the ⋯ menu.
+Q: and A: markers say which post is the question and which is the answer, so the eye lands on the answer first. The opening post's upvotes read as "15 people have this question too", which tells a learner they're not alone. The rail gives the challenge's context. The admin's status change sits behind the ⋯ menu.
 
 ### Challenges
 
@@ -155,7 +156,7 @@ Challenges are content, so they get cards; threads are a list. Each card bridges
 
 ![Insights with sidebar, admin view](wireframes/insights.png)
 
-The tiles answer "is support keeping up?" before any chart is read. "Where learners struggle" combines both datasets: challenges ranked by open threads, shown with their completion rate. Returning Expectation Values has 5 open threads and a 30% completion rate. One click opens that challenge's open threads.
+The tiles answer "is support keeping up?" before any chart is read. Two charts follow: new conversations per month, and "Where learners struggle", which combines both datasets: challenges ranked by open threads, shown with their completion rate. Returning Expectation Values has 5 open threads and a 30% completion rate. One click opens that challenge's open threads.
 
 ### Responsive behavior
 
@@ -164,10 +165,10 @@ Below 900 px the sidebar becomes a slide-in menu and every screen becomes one co
 | Screen | 1200 px and wider | 900–1199 px | Below 900 px (phones, small tablets) |
 | --- | --- | --- | --- |
 | Navigation | Sidebar always visible, except on the thread page, where the menu button opens it as a drawer | Same | Menu button opens the sidebar as a drawer from the left, listing all 13 categories and holding the role switcher |
-| Community list | Full rows: vote column, avatar, two-line excerpt | Same | Avatar and vote column hidden; votes join the status line; one-line excerpt; tabs scroll sideways; More filters opens a bottom sheet |
-| Thread | Thread plus right rail | Rail moves below the thread | Challenge becomes a compact strip under the title; related threads follow the replies; Reply button stays pinned to the bottom |
+| Community list | Full rows: vote column, avatar, two-line excerpt | Same | Avatar and vote column hidden; votes join the status line; one-line excerpt; tabs scroll sideways |
+| Thread | Thread plus right rail | Rail moves below the thread | Challenge becomes a compact strip under the title; Reply button stays pinned to the bottom |
 | Challenges | Two cards per category row, arrows scroll sideways | Same | One card per row, swipe sideways within a category |
-| Insights | Four tiles, charts 2×2 | Same | Tiles 2×2, charts stacked full width |
+| Insights | Four tiles, two charts side by side | Same | Tiles 2×2, charts stacked full width |
 
 **Why a drawer, not a dropdown:** the menu holds 15 or more items (sections, 13 categories, the role switcher), which would make a dropdown a long scrolling list. MUI's Drawer has a permanent variant for desktop and a temporary one for phones, so both share one component. The temporary drawer moves focus inside, closes on Esc or a tap on the scrim, and returns focus to the menu button, behaviour a custom dropdown would need hand-built.
 
@@ -186,7 +187,7 @@ Only the list and the thread page get phone wireframes, because they change stru
 | NFR-5 | Testing | Unit tests for data normalization, the query functions and the permission rules. Component tests for list filtering, replying and role gating. One Playwright run through the main flow. All green before each commit. |
 | NFR-6 | Code quality | TypeScript strict mode, ESLint and Prettier, one folder per page with shared UI in `components/`, no `any`. |
 | NFR-7 | Documentation | README covers setup, scripts, assumptions, architecture, trade-offs and what's next. `DECISIONS.md` holds the decision log. |
-| NFR-8 | AI workflow | `AGENTS.md` holds the conventions for any coding agent; `CLAUDE.md` imports it. Each slice starts in plan mode. One commit per slice, with a message that explains why. Every diff is read before commit. |
+| NFR-8 | AI workflow | `AGENTS.md` holds the conventions for any coding agent; `CLAUDE.md` imports it. Each slice starts in plan mode. One commit per slice, with a message that explains why. Every diff is read before commit. Every UI slice uses the frontend-design skill and its reading guide carries screenshots at 1440 px and 375 px. |
 
 ## Data findings and normalization rules
 
@@ -207,7 +208,7 @@ The data has inconsistencies that look deliberate. Normalization runs once, when
 | `points` stored as a string | 1 challenge (CHAL\_022) | Convert to a number |
 | Challenge titles repeat | 13 titles, never twice in one category | Key on `challenge_id`; show the category beside a repeated title on cards and in the thread rail |
 | Draft or archived challenges that have conversations | 18 challenges | Hidden from the challenge list by default; their conversations stay visible, and the thread rail says "Archived challenge" or "Draft challenge" |
-| No assignee | 164 conversations | `null` means unassigned; filterable |
+| No assignee | 164 conversations | `null` means unassigned; it puts an open thread under Needs attention |
 | No resolution time | 375 conversations (open and answered) | Resolution metrics use resolved and closed conversations only |
 | Markdown in descriptions | Most conversations and challenges | Render with `react-markdown`, raw HTML off |
 
@@ -235,7 +236,9 @@ All endpoints live under `/api` and are served by MSW handlers. Each handler is 
 
 A page past the end returns empty `items` with the real `total`. Unknown parameter values fall back to their defaults.
 
-Data changes stay in memory and reset on reload. If time allows, the in-memory data persists to `sessionStorage` so a demo survives a refresh.
+The contract is wider than the build since D53. `tag`, `priority` and `assignee` on the list were built and tested in the foundation slices and stay; no screen sends them. Not built: `POST /api/conversations`; every PATCH field but `status`; `q` and `difficulty` on `GET /api/challenges`. They stay in the table as the designed contract.
+
+Data changes stay in memory and reset on reload.
 
 ## Architecture
 
@@ -247,9 +250,9 @@ Routes: `/` is the Community list, `/threads/:id` a thread, `/challenges` the ch
 
 ## Milestones
 
-Five milestones, each ending in a working state that could be submitted. Every diff is read before it is committed, and the last milestone leaves buffer before the deadline.
+With the foundation in place, the remaining work was prioritized (D53) into three screen slices and one pass, each ending in a working state that could be submitted. Every diff is read before it is committed.
 
-### M0 · Plan
+### M0 · Plan (done)
 
 - [x] Product and technical decisions made
 - [x] Review this doc and adjust
@@ -257,41 +260,25 @@ Five milestones, each ending in a working state that could be submitted. Every d
 - [x] Create the GitHub repo
 - [x] Commit the brief's data files (`data/`), the docs and the wireframes
 
-**Done when:** the repo exists with `AGENTS.md`, `CLAUDE.md`, `DECISIONS.md`, this document with its wireframes, a README stub and the data.
+### M1 · Foundation (done)
 
-### M1 · Foundation and conversation list
+- [x] Slice 1 · Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
+- [x] Slice 2 · Domain types, normalization and `can()`, with unit tests
+- [x] Slice 3 · Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
+- [x] Slice 4 · MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
+- [x] Slice 5 · App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
 
-- [x] Scaffold: Vite, React, TypeScript strict, ESLint, Prettier, Vitest, scripts, `.gitignore`, README stub
-- [x] Domain types, normalization and `can()`, with unit tests
-- [x] Mock store and query functions (filters, tabs, search, paging, meta), with unit tests
-- [x] MSW handlers for conversations and meta, API client with the role header, TanStack Query hooks, role context
-- [x] App shell: theme, fonts, router, top bar, sidebar and drawer, role switcher, stub routes
-- [ ] Community list: rows, paging, states, live region, sidebar categories, intent tabs (FR-1, FR-3 to FR-7)
-- [ ] Search and More filters: tag, challenge chip; priority and assignee for the admin (FR-2, FR-4, FR-5)
+### M2 · Screens
 
-**Done when:** the list filters, searches and pages through the mock server with state in the URL; loading, empty and error states work; unit tests pass.
+- [ ] Slice 6 · Community list and design system: the shared pieces (status chip, avatar, list row, page header, empty and error states), the lifted shell, then rows, intent tabs with Needs attention, sidebar categories, top-bar search, the challenge chip, paging, states and the live region (FR-1 to FR-7)
+- [ ] Slice 7 · Thread page: header, answer-first posts, "About this challenge" rail, reply form, the admin's status change with its server-side 403 (FR-8 to FR-11, FR-13, FR-22)
+- [ ] Slice 8 · Insights and Challenges: `/api/insights` with a unit test against hand-checked numbers, four tiles and two charts with text summaries, the "not permitted" state; challenge cards by category, each opening its filtered list (FR-15, FR-18 to FR-21). For the hand check: in 20 resolved or closed conversations `resolution_time_hours` is shorter than the span of the posts. Use the field as given; no rule
 
-### M2 · Conversation detail, actions, challenges
+**Done when:** each role can be demoed end to end, the list filters, searches and pages through the mock server with state in the URL, and a forbidden action is blocked by the server even if the UI were bypassed.
 
-- [ ] Thread page and context rail: FR-8 to FR-10, FR-22
-- [ ] Reply and learner actions: FR-11, FR-12, with the demo learner picked from the data
-- [ ] Admin ⋯ menu with server-side 403s: FR-13
-- [ ] Challenge cards: FR-15, with the challenge categories in the sidebar (FR-3) and the challenge picker in More filters (FR-4)
-- [ ] Component tests for replying and role gating
+### M3 · Polish and submit
 
-**Done when:** each role can be demoed end to end, and a forbidden action is blocked by the server even if the UI were bypassed.
-
-### M3 · Insights
-
-- [ ] `/api/insights` aggregation with a unit test against hand-checked numbers. For the hand check: in 20 resolved or closed conversations `resolution_time_hours` is shorter than the span of the posts. Use the field as given; no rule
-- [ ] Summary tiles and four charts with text summaries: FR-18 to FR-21
-- [ ] Admin-only route with a clear "not permitted" state
-
-**Done when:** the numbers match the hand check, and non-admins can't reach the page.
-
-### M4 · Harden and submit
-
-- [ ] Keyboard and axe pass; fix findings
+- [ ] Design, responsive and accessibility pass over all screens: 1440 px and 375 px, keyboard, axe; fix findings
 - [ ] One Playwright run: filter, open a conversation, reply
 - [ ] README: setup, assumptions, architecture, trade-offs, what's next
 - [ ] Fresh-clone check: `npm install`, `npm run dev`, `npm test`
@@ -301,19 +288,25 @@ Five milestones, each ending in a working state that could be submitted. Every d
 
 ## Cut list, risks and sources
 
-**Cut in this order if time runs short:**
+**Moved to What's next (D53).** The support system is the primary focus, so controls that repeat a pattern already demonstrated (another filter, another admin action, another chart) move to What's next, and the effort goes into the quality of the core screens.
 
-1. Hints and similar threads in the ask flow (part of FR-14); a plain ask form stays
-2. Challenge page (FR-16); cards open the filtered list instead
-3. Related threads in the thread rail (part of FR-22); "About this challenge" stays
-4. Pin and lock
-5. `sessionStorage` persistence
-6. Charts reduced from four to two, keeping the summary tiles
-7. The ask form itself (FR-14); replying stays
+1. More filters: tag, a challenge picker, and priority and assignee for the admin (part of FR-4). The intent tabs, the categories, search and the challenge chip stay
+2. Admin actions other than the status change: assign, set priority, pin and lock (part of FR-13)
+3. Learner actions on their own threads, marking an accepted answer and marking solved (FR-12), and with them the demo learner (D29)
+4. Related threads in the thread rail (part of FR-22); "About this challenge" stays
+5. Challenge page (FR-16); cards open the filtered list instead
+6. Difficulty filter on the Challenges page (part of FR-15)
+7. Two Insights charts: conversations by status, since the tiles already show the backlog, and median resolution time by category (part of FR-19). The four tiles, new conversations per month and where learners struggle stay
+8. The ask form with its hints and similar threads (FR-14); replying stays
+9. `sessionStorage` persistence
 
-**Already cut:** search on the Challenges page (was part of FR-15). The top-bar search always searches questions (FR-2), and a second search field on one page was not worth its states and tests. The `q` parameter on `GET /api/challenges` stays for the challenge picker. Listed in the README under What's next.
+The list filters of item 1 already work in the mock server, and `can()` already holds the rules for items 2 and 3, both tested; bringing those back is a PATCH field and interface work.
 
-**Never cut:** normalization tests, state in the URL, server-enforced roles, README and decision log.
+**Moved earlier:** search on the Challenges page (was part of FR-15, D34). The top-bar search always searches questions (FR-2), and a second search field on one page was not worth its states and tests.
+
+**If scope must shrink further, in this order:** the two charts, keeping the tiles; then the admin's status change. The Challenges page is a brief requirement and is never cut.
+
+**Never cut:** the Challenges page, normalization tests, state in the URL, server-enforced roles, README and decision log.
 
 **Risks**
 
